@@ -204,68 +204,6 @@ GameState::~GameState()
 
 void GameState::Update(float dt, const Input& input)
 {
-#if 0
-
-    if (input.pressed.right != input.pressed.left)
-    {
-        if (input.pressed.right)
-        {
-            if (dir == Direction_Left)
-                dir = Direction_Front;
-            else
-                dir = (Direction)(dir + 1);
-        }
-        else//left_pressed
-        {
-            if (dir == Direction_Front)
-                dir = Direction_Left;
-            else
-                dir = (Direction)(dir - 1);
-        }
-
-        switch(dir)
-        {
-        case Direction_Front:
-            camera.rotation = 0.0f;
-            break;
-        case Direction_Right:
-            camera.rotation = -90.0f;
-            break;
-        case Direction_Back:
-            camera.rotation = -180.0f;
-            break;
-        case Direction_Left:
-            camera.rotation = -270.0f;
-            break;
-        }
-    }
-
-#else
-    float rotation_speed = 180.0f;
-    if(input.down.right)
-    {
-        camera.rotation -= rotation_speed * dt;
-    }
-    if(input.down.left)
-    {
-        camera.rotation += rotation_speed * dt;
-    }
-    if (camera.rotation >= 360.0f)
-        camera.rotation -= 360.0f;
-    else if (camera.rotation < 0.0f)
-        camera.rotation += 360.0f;
-
-    DEBUG_LOG("rotation: %f\n", camera.rotation);
-    if (camera.rotation >= 315.0f || camera.rotation < 45.0f)
-        player_dir = Direction_Front;
-    else if (camera.rotation >= 45.0f && camera.rotation < 135.0f)
-        player_dir = Direction_Left;
-    else if (camera.rotation >= 135.0f && camera.rotation < 225.0f)
-        player_dir = Direction_Back;
-    else if (camera.rotation >= 225.0f && camera.rotation < 315.0f)
-        player_dir = Direction_Right;
-#endif
-
 
 #if 1
     int movement = 0;
@@ -348,6 +286,74 @@ void GameState::Update(float dt, const Input& input)
         camera.position.z -= go.z * speed * dt;
     }
 #endif
+
+#define MOVE_MODE 1
+#if MOVE_MODE == 1
+
+    if (move_state == MoveState_Idle)
+    {
+        if (input.pressed.right != input.pressed.left)
+        {
+            if (input.pressed.right)
+            {
+                if (player_dir == Direction_Left)
+                    player_dir = Direction_Front;
+                else
+                    player_dir = (Direction)(player_dir + 1);
+            }
+            else//left_pressed
+            {
+                if (player_dir == Direction_Front)
+                    player_dir = Direction_Left;
+                else
+                    player_dir = (Direction)(player_dir - 1);
+            }
+
+            switch (player_dir)
+            {
+            case Direction_Front:
+                camera.rotation = 0.0f;
+                break;
+            case Direction_Right:
+                camera.rotation = -90.0f;
+                break;
+            case Direction_Back:
+                camera.rotation = -180.0f;
+                break;
+            case Direction_Left:
+                camera.rotation = -270.0f;
+                break;
+            }
+        }
+    }
+
+#else
+    float rotation_speed = 180.0f;
+    if(input.down.right)
+    {
+        camera.rotation -= rotation_speed * dt;
+    }
+    if(input.down.left)
+    {
+        camera.rotation += rotation_speed * dt;
+    }
+    if (camera.rotation >= 360.0f)
+        camera.rotation -= 360.0f;
+    else if (camera.rotation < 0.0f)
+        camera.rotation += 360.0f;
+
+    DEBUG_LOG("rotation: %f\n", camera.rotation);
+    if (camera.rotation >= 315.0f || camera.rotation < 45.0f)
+        player_dir = Direction_Front;
+    else if (camera.rotation >= 45.0f && camera.rotation < 135.0f)
+        player_dir = Direction_Left;
+    else if (camera.rotation >= 135.0f && camera.rotation < 225.0f)
+        player_dir = Direction_Back;
+    else if (camera.rotation >= 225.0f && camera.rotation < 315.0f)
+        player_dir = Direction_Right;
+#endif
+
+
 }
 
 void GameState::Render(float screenRatio)

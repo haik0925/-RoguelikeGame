@@ -86,6 +86,8 @@ struct GameState
     float move_speed = 5.0f;
     float move_t = 0.0f;
 
+    float action_time_limit = 5.0f;
+
     GameState();
     ~GameState();
 
