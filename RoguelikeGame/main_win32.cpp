@@ -112,6 +112,8 @@ void Win32Shutdown(SDL_Window* window, SDL_GLContext context)
 
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
+    LEAK_CHECKS();
+
     SDL_Window* window = nullptr;
     SDL_GLContext context = nullptr;
     if (Win32Init(1024, 768, &window, &context))

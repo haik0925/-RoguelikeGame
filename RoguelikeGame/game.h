@@ -4,6 +4,9 @@
 #include "game_math.h"
 #include "definitions.h"
 #include <vector>
+#pragma warning(push)
+#pragma warning(disable: 4512)
+#pragma warning(disable: 4351)
 
 struct Input
 {
@@ -125,4 +128,5 @@ struct GameState
     void RenderTile(const Tile& tile, int model_location);
 };
 
+#pragma warning(pop)
 #endif//GAME_H

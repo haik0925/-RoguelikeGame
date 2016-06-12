@@ -2,7 +2,11 @@
 #define DEFINITIONS_H
 #include <Windows.h>
 #include <cstdint>
+#if ROGUE_DEBUG
+#include <cstdlib>
+#include <crtdbg.h>
 #include <cstdio>
+#endif
 
 typedef uint8_t u8;
 typedef uint16_t u16;
@@ -29,8 +33,14 @@ typedef int64_t i64;
     sprintf(buf, format, __VA_ARGS__);\
     OutputDebugString(buf);\
 }
+#define LEAK_CHECKS()\
+_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF|_CRTDBG_LEAK_CHECK_DF);\
+_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_DEBUG);\
+_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);\
+_CrtSetBreakAlloc(-1);
 #else
 #define DEBUG_LOG(format, ...)
+#define LEAK_CHECKS()
 #endif
 
 
