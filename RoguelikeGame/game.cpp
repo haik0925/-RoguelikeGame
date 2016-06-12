@@ -230,7 +230,8 @@ GameState::GameState()
             {
                 Enemy enemy = {};
                 TileToWorld(Tile_Size, x, y, &enemy.position.x, &enemy.position.z);
-                enemy.scale.Set(1.5f, 1.5f, 1.5f);
+                enemy.position.y = -0.5f;
+                enemy.scale.Set(1.0f, 1.0f, 1.0f);
                 enemies.push_back(enemy);
             }
         }
