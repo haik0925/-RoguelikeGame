@@ -191,12 +191,6 @@ GameState::GameState()
         }
     }
 
-    camera_x = 0;
-    camera_z = 0;
-
-    move = MoveState_Idle;
-    dir = Direction_Front;
-
     glEnable(GL_DEPTH_TEST);
 }
 
@@ -210,7 +204,7 @@ GameState::~GameState()
 
 void GameState::Update(float dt, const Input& input)
 {
-#if 1
+#if 0
 
     if (input.pressed.right != input.pressed.left)
     {
@@ -246,8 +240,36 @@ void GameState::Update(float dt, const Input& input)
         }
     }
 
+#else
+    float rotation_speed = 180.0f;
+    if(input.down.right)
+    {
+        camera.rotation -= rotation_speed * dt;
+    }
+    if(input.down.left)
+    {
+        camera.rotation += rotation_speed * dt;
+    }
+    if (camera.rotation >= 360.0f)
+        camera.rotation -= 360.0f;
+    else if (camera.rotation < 0.0f)
+        camera.rotation += 360.0f;
+
+    DEBUG_LOG("rotation: %f\n", camera.rotation);
+    if (camera.rotation >= 315.0f || camera.rotation < 45.0f)
+        player_dir = Direction_Front;
+    else if (camera.rotation >= 45.0f && camera.rotation < 135.0f)
+        player_dir = Direction_Left;
+    else if (camera.rotation >= 135.0f && camera.rotation < 225.0f)
+        player_dir = Direction_Back;
+    else if (camera.rotation >= 225.0f && camera.rotation < 315.0f)
+        player_dir = Direction_Right;
+#endif
+
+
+#if 1
     int movement = 0;
-    if (input.pressed.up != input.pressed.down)
+    if ((input.pressed.up != input.pressed.down) && move_state == MoveState_Idle)
     {
         if(input.pressed.up)
             movement = 1;
@@ -257,7 +279,7 @@ void GameState::Update(float dt, const Input& input)
         //int moved_index = 0;
         int moved_x = camera_x;
         int moved_z = camera_z;
-        switch(dir)
+        switch(player_dir)
         {
         case Direction_Front:
             moved_z += movement;
@@ -276,27 +298,39 @@ void GameState::Update(float dt, const Input& input)
         {
             if (tilemap[moved_z * Map_Size + moved_x] == 1)
             {
+                camera_prev_x = camera_x;
+                camera_prev_z = camera_z;
                 camera_x = moved_x;
                 camera_z = moved_z;
+                move_state = MoveState_Moving;
             }
         }
-        camera.position.x = Tile_Size * camera_x;
-        camera.position.z = Tile_Size * camera_z;
+        //camera.position.x = Tile_Size * camera_x;
+        //camera.position.z = Tile_Size * camera_z;
+    }
+
+    switch (move_state)
+    {
+    case MoveState_Idle:
+        move_t = 0.0f;
+        break;
+    case MoveState_Moving:
+        move_t += move_speed * dt;
+        if (move_t >= 1.0f)
+        {
+            move_t = 1.0f;
+            move_state = MoveState_Idle;
+        }
+        if (camera_x != camera_prev_x)
+            camera.position.x = (Tile_Size * ((camera_prev_x * (1.0f - move_t)) + (camera_x * move_t)));
+        if (camera_z != camera_prev_z)
+            camera.position.z = (Tile_Size * ((camera_prev_z * (1.0f - move_t)) + (camera_z * move_t)));
+        break;
+    case MoveState_Rotating:
+        break;
     }
 
 #else
-    float rotation_speed = 180.0f;
-    if(input.down.right)
-    {
-        camera.rotation -= rotation_speed * dt;
-    }
-    if(input.down.left)
-    {
-        camera.rotation += rotation_speed * dt;
-    }
-    if(camera.rotation >= 360.0f)
-        camera.rotation -= 360.0f;
-
 
     float rotation_radian = ToRadian(camera.rotation);
     Vec3 go(-sin(rotation_radian), 0.0f, cos(rotation_radian));

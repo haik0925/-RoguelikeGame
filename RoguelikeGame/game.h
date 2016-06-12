@@ -77,10 +77,14 @@ struct GameState
     const float Tile_Size = 2.0f;
     int tilemap[100] = {};
 
-    int camera_x;
-    int camera_z;
-    MoveState move;
-    Direction dir;
+    int camera_prev_x = 0;
+    int camera_prev_z = 0;
+    int camera_x = 0;
+    int camera_z = 0;
+    MoveState move_state = MoveState_Idle;
+    Direction player_dir = Direction_Front;
+    float move_speed = 5.0f;
+    float move_t = 0.0f;
 
     GameState();
     ~GameState();
