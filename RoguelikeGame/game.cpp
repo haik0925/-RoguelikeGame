@@ -38,7 +38,7 @@ Mat4 Camera::GetProjection(float ratio)
         d / ratio, 0.f, 0.f, 0.f,
         0.f, d, 0.f, 0.f,
         0.f, 0.f, 1.0f / (far_plane - near_plane), -near_plane / (far_plane - near_plane),
-        0.f, 0.f, 1, 0.f,
+        0.f, 0.f, 1.0f, 0.f,
     };
 
     return result;
@@ -57,6 +57,9 @@ void TileToWorld(float tile_size, int tile_x, int tile_y, float* world_x, float*
 
 GameState::GameState()
 {
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+
     float temp[] =
     {
         0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
@@ -89,6 +92,31 @@ GameState::GameState()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    auto LoadTexture = [this](const char* filename)
+    {
+        int sheet_w;
+        int sheet_h;
+        int sheet_bpp;
+        auto* rgb = stbi_load(filename, &sheet_w, &sheet_h, &sheet_bpp, 4);
+        GLuint texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sheet_w, sheet_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgb);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        stbi_image_free(rgb);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        textures.push_back(texture);
+    };
+
+    LoadTexture("Texture/floor.png");
+    LoadTexture("Texture/wall.png");
+    LoadTexture("Texture/enemy.png");
+
+#if 0
     {
         int sheet_w;
         int sheet_h;
@@ -127,17 +155,38 @@ GameState::GameState()
         textures.push_back(texture);
     }
 
+    {
+        int sheet_w;
+        int sheet_h;
+        int sheet_bpp;
+        auto* rgb = stbi_load("Texture/enemy.png", &sheet_w, &sheet_h, &sheet_bpp, 3);
+        GLuint texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, sheet_w, sheet_h, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        stbi_image_free(rgb);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        textures.push_back(texture);
+    }
+#endif
+
+
     int grid[100] =
     {
         1,1,1,1,1,1,1,1,1,1,
-        1,0,0,1,0,0,0,0,0,1,
-        1,0,0,1,0,0,0,0,0,1,
-        1,0,0,1,0,0,0,0,0,1,
-        1,0,0,1,0,0,0,0,0,1,
-        1,0,0,1,0,0,0,0,0,1,
-        1,0,0,1,1,1,1,1,0,1,
-        1,0,0,0,0,0,1,1,0,1,
-        1,0,0,0,0,0,1,1,0,1,
+        1,1,0,1,0,0,0,0,0,1,
+        1,1,0,1,0,0,0,0,0,1,
+        1,1,0,1,0,0,0,0,0,1,
+        1,1,0,1,0,0,0,0,0,1,
+        2,1,0,1,0,0,0,0,0,1,
+        1,1,0,1,1,1,1,1,0,1,
+        1,1,0,0,0,0,1,1,0,1,
+        1,1,0,0,0,0,1,1,0,1,
         1,1,1,1,1,1,1,1,1,1,
     };
     InitDungeon(&dungeon, 10, 10, grid);
@@ -164,7 +213,8 @@ GameState::GameState()
     {
         for (int x = 0; x < dungeon.width; ++x)
         {
-            if (dungeon.GetTile(x, y) == 1)
+            int tile_value = dungeon.GetTile(x, y);
+            if (tile_value > 0)
             {
                 Tile floor = {};
                 TileToWorld(Tile_Size, x, y, &floor.position.x, &floor.position.z);
@@ -174,6 +224,14 @@ GameState::GameState()
                 floor.scale.Set(Tile_Size, Tile_Size, 1.0f);
                 floor.rotation.x = 90.0f;
                 floors.push_back(floor);
+            }
+
+            if (tile_value == 2)
+            {
+                Enemy enemy = {};
+                TileToWorld(Tile_Size, x, y, &enemy.position.x, &enemy.position.z);
+                enemy.scale.Set(1.5f, 1.5f, 1.5f);
+                enemies.push_back(enemy);
             }
         }
     }
@@ -231,7 +289,7 @@ GameState::GameState()
     {
         for (int x = 0; x < dungeon.width; ++x)
         {
-            if (dungeon.GetTile(x, y) == 1)
+            if (dungeon.GetTile(x, y) > 0)
             {
                 if ((x == dungeon.width - 1) || (((x + 1) < dungeon.width) && dungeon.GetTile(x + 1, y) == 0))
                 {
@@ -274,7 +332,6 @@ GameState::GameState()
             }
         }
     }
-    glEnable(GL_DEPTH_TEST);
 }
 
 GameState::~GameState()
@@ -318,7 +375,7 @@ void GameState::Update(float dt, const Input& input)
         if (moved_x >= 0 && moved_x < Map_Size && moved_z >= 0 && moved_z < Map_Size)
         {
             //if (tilemap[moved_z * Map_Size + moved_x] == 1)
-            if (dungeon.GetTile(moved_x, moved_z) == 1)
+            if (dungeon.GetTile(moved_x, moved_z) > 0)
             {
                 camera_prev_x = camera_x;
                 camera_prev_z = camera_z;
@@ -469,6 +526,13 @@ void GameState::Render(float screenRatio)
     {
         RenderTile(wall, model_location);
     }
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    float camera_rotation = camera.rotation;
+    for (auto& enemy : enemies)
+    {
+        RenderEnemy(enemy, camera_rotation, model_location);
+    }
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
@@ -496,9 +560,9 @@ void GameState::RenderTile(const Tile& tile, int model_location)
         float s = sin(ToRadian(tile.rotation.y));
         Mat4 rotation_y = 
         {
-            c, 0.f, s, 0.f,
+            c, 0.f, -s, 0.f,
             0.f, 1.f, 0.f, 0.f,
-            -s, 0.f, c, 0.f,
+            s, 0.f, c, 0.f,
             0.f, 0.f, 0.f, 1.f
         };
         rotation *= rotation_y;
@@ -508,6 +572,28 @@ void GameState::RenderTile(const Tile& tile, int model_location)
         Translation(tile.position.x, tile.position.y, tile.position.z) *
         rotation *
         Scale(tile.scale.x, tile.scale.y, tile.scale.z);
+    glUniformMatrix4fv(model_location, 1, GL_TRUE, model.m);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+}
+
+void GameState::RenderEnemy(const Enemy& enemy, float face_angle, int model_location)
+{
+    float c = cos(ToRadian(face_angle));
+    float s = sin(ToRadian(face_angle));
+    Mat4 rotation = 
+    {
+        c, 0.f, -s, 0.f,
+        0.f, 1.f, 0.f, 0.f,
+        s, 0.f, c, 0.f,
+        0.f, 0.f, 0.f, 1.f
+    };
+
+    Mat4 model =
+        Translation(enemy.position.x, enemy.position.y, enemy.position.z) *
+        rotation *
+        Scale(enemy.scale.x, enemy.scale.y, enemy.scale.z);
+
+    glBindTexture(GL_TEXTURE_2D, textures[2]);
     glUniformMatrix4fv(model_location, 1, GL_TRUE, model.m);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }

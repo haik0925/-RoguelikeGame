@@ -60,12 +60,18 @@ void InitDungeon(Dungeon* dungeon, int width, int height, int* tile_grid)
 void WorldToTile(int tile_size, float world_x, float world_z, int* tile_x, int* tile_y);
 void TileToWorld(int tile_size, int tile_x, int tile_y, float* world_x, float* world_z);
 
+struct Enemy
+{
+    Vec3 position;
+    Vec3 scale;
+};
+
 struct Camera
 {
     Vec3 position = {};
     float rotation = 0.0f;
     float fov = 70.0f;
-    float far_plane = 100.f;
+    float far_plane = 15.0f;
     float near_plane = 0.1f;
 
     Mat4 GetView();
@@ -109,6 +115,8 @@ struct GameState
     Dungeon dungeon;
     //int tilemap[100] = {};
 
+    std::vector<Enemy> enemies;
+
     int camera_prev_x = 0;
     int camera_prev_z = 0;
     int camera_x = 0;
@@ -126,6 +134,7 @@ struct GameState
     void Update(float dt, const Input& input);
     void Render(float screenRatio);
     void RenderTile(const Tile& tile, int model_location);
+    void RenderEnemy(const Enemy& enemy, float face_angle, int model_location);
 };
 
 #pragma warning(pop)
