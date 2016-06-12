@@ -114,7 +114,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
     SDL_Window* window = nullptr;
     SDL_GLContext context = nullptr;
-    if (Win32Init(1280, 720, &window, &context))
+    if (Win32Init(1024, 768, &window, &context))
     {
         {
             GameState game_state;
@@ -126,7 +126,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             float dt = 0.0f;
 
             Input input;
-            //bool left = false, right = false, up = false, down = false;
 
             bool running = true;
             while (running)
@@ -135,9 +134,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                 std::chrono::duration<float> duration = current_time - last_time;
                 dt = duration.count();
 
-                //left = false; right = false; up = false; down = false;
-                //input.down.left = false; input.down.right = false;
-                //input.down.up = false; input.down.down = false;
                 input.pressed.left = false; input.pressed.right = false;
                 input.pressed.up = false; input.pressed.down = false;
 
@@ -202,17 +198,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
                 glViewport(0, 0, dim.width, dim.height);
                 game_state.Render((float)dim.width / (float)dim.height);
-#if 0
-                glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-                glClear(GL_COLOR_BUFFER_BIT);
-
-                glUseProgram(game_state.shader_program);
-                glBindVertexArray(game_state.vao);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, game_state.ebo);
-                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-                glBindVertexArray(0);
-#endif
 
                 SDL_GL_SwapWindow(window);
 

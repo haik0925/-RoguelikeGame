@@ -11,11 +11,16 @@ Mat4 Camera::GetView()
     Vec3 up(0.0f, 1.0f, 0.0f);
     Vec3 look = CrossProduct(right, up);
 
+    auto adjusted_pos = position;
+    float offset = 1.0f;
+    adjusted_pos.x -= look.x * offset;
+    adjusted_pos.y -= look.y * offset;
+    adjusted_pos.z -= look.z * offset;
     Mat4 result =
     {
-        right.x, right.y, right.z, -DotProduct(position, right),
-        up.x, up.y, up.z, -DotProduct(position, up),
-        look.x, look.y, look.z, -DotProduct(position, look),
+        right.x, right.y, right.z, -DotProduct(adjusted_pos, right),
+        up.x, up.y, up.z, -DotProduct(adjusted_pos, up),
+        look.x, look.y, look.z, -DotProduct(adjusted_pos, look),
         0.0f, 0.0f, 0.0f, 1.0f
     };
 
@@ -243,8 +248,6 @@ void GameState::Update(float dt, const Input& input)
                 move_state = MoveState_Moving;
             }
         }
-        //camera.position.x = Tile_Size * camera_x;
-        //camera.position.z = Tile_Size * camera_z;
     }
 
     switch (move_state)
@@ -287,8 +290,8 @@ void GameState::Update(float dt, const Input& input)
     }
 #endif
 
-#define MOVE_MODE 1
-#if MOVE_MODE == 1
+#define MOVE_MODE 0
+#if MOVE_MODE == 0
 
     if (move_state == MoveState_Idle)
     {
@@ -342,7 +345,6 @@ void GameState::Update(float dt, const Input& input)
     else if (camera.rotation < 0.0f)
         camera.rotation += 360.0f;
 
-    DEBUG_LOG("rotation: %f\n", camera.rotation);
     if (camera.rotation >= 315.0f || camera.rotation < 45.0f)
         player_dir = Direction_Front;
     else if (camera.rotation >= 45.0f && camera.rotation < 135.0f)

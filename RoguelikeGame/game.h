@@ -30,8 +30,7 @@ struct Camera
 {
     Vec3 position = {};
     float rotation = 0.0f;
-    //Vec2 direction = {};
-    float fov = 90.0f;
+    float fov = 70.0f;
     float far_plane = 100.f;
     float near_plane = 0.1f;
 
@@ -63,7 +62,6 @@ struct GameState
     GLuint vbo = 0;
     GLuint ebo = 0;
     std::vector<GLuint> textures;
-    //GLuint texture = 0;
 
     Camera camera;
     Mat4 view;
@@ -71,7 +69,6 @@ struct GameState
 
     std::vector<Tile> floors;
     std::vector<Tile> walls;
-    //Wall walls[3];
 
     const int Map_Size = 10;
     const float Tile_Size = 2.0f;
