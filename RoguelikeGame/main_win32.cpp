@@ -64,7 +64,7 @@ bool Win32Init(int window_width, int window_height, SDL_Window** window, SDL_GLC
 {
     if (SDL_Init(SDL_INIT_VIDEO) >= 0)
     {
-        *window = SDL_CreateWindow("OldSchoolFPS", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, window_width, window_height, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+        *window = SDL_CreateWindow("RoguelikeGame", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, window_width, window_height, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
         if (window)
         {
             *context = SDL_GL_CreateContext(*window);

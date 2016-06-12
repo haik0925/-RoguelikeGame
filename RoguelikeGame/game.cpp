@@ -41,6 +41,17 @@ Mat4 Camera::GetProjection(float ratio)
     return result;
 }
 
+void WorldToTile(float tile_size, float world_x, float world_z, int* tile_x, int* tile_y)
+{
+    *tile_x = (int)(world_x / tile_size);
+    *tile_y = (int)(world_z / tile_size);
+}
+void TileToWorld(float tile_size, int tile_x, int tile_y, float* world_x, float* world_z)
+{
+    *world_x = tile_x * tile_size;
+    *world_z = tile_y * tile_size;
+}
+
 GameState::GameState()
 {
     float temp[] =
@@ -53,12 +64,6 @@ GameState::GameState()
     for (int i = 0; i < ARRAY_SIZE(quad); ++i)
         quad[i] = temp[i];
 
-#if 0
-    quad[0] = Vec3(0.5f, 0.5f, 0.0f);
-    quad[1] = Vec3(-0.5f, 0.5f, 0.0f);
-    quad[2] = Vec3(-0.5f, -0.5f, 0.0f);
-    quad[3] = Vec3(0.5f, -0.5f, 0.0f);
-#endif
     indices[0] = 3; indices[1] = 0; indices[2] = 1;
     indices[3] = 1; indices[4] = 2; indices[5] = 3;
 
@@ -132,34 +137,56 @@ GameState::GameState()
         1,0,0,0,0,0,1,1,0,1,
         1,1,1,1,1,1,1,1,1,1,
     };
+    InitDungeon(&dungeon, 10, 10, grid);
+
     floors.reserve(100);
+#if 0
     for (int i = 0; i < ARRAY_SIZE(tilemap); ++i)
     {
         tilemap[i] = grid[i];
         if (tilemap[i] == 1)
         {
             Tile floor = {};
-            floor.position.x = Tile_Size * (i % 10);
+            TileToWorld(Tile_Size, i % 10, i / 10, &floor.position.x, &floor.position.z);
+            //floor.position.x = Tile_Size * (i % 10);
             floor.position.y = -(Tile_Size / 2.0f);
-            floor.position.z = Tile_Size * (i / 10);
+            //floor.position.z = Tile_Size * (i / 10);
             floor.scale.Set(Tile_Size, Tile_Size, 1.0f);
             floor.rotation.x = 90.0f;
             floors.push_back(floor);
         }
     }
+#endif
+    for (int y = 0; y < dungeon.height; ++y)
+    {
+        for (int x = 0; x < dungeon.width; ++x)
+        {
+            if (dungeon.GetTile(x, y) == 1)
+            {
+                Tile floor = {};
+                TileToWorld(Tile_Size, x, y, &floor.position.x, &floor.position.z);
+                //floor.position.x = Tile_Size * (i % 10);
+                floor.position.y = -(Tile_Size / 2.0f);
+                //floor.position.z = Tile_Size * (i / 10);
+                floor.scale.Set(Tile_Size, Tile_Size, 1.0f);
+                floor.rotation.x = 90.0f;
+                floors.push_back(floor);
+            }
+        }
+    }
 
     walls.reserve(100);
+#if 0
     for (int i = 0; i < ARRAY_SIZE(tilemap); ++i)
     {
         if (tilemap[i] == 1)
         {
-
             if ((i % 10 == 9) || ((i + 1) < ARRAY_SIZE(tilemap)) && tilemap[i + 1] == 0)
             {
                 Tile wall = {};
                 wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
-                wall.position.x = Tile_Size * ((i % 10) + 0.5f);
-                wall.position.z = Tile_Size * (i / 10);
+                TileToWorld(Tile_Size, i % 10, i / 10, &wall.position.x, &wall.position.z);
+                wall.position.x += Tile_Size * 0.5f;
                 wall.rotation.y = 90.0f;
                 walls.push_back(wall);
             }
@@ -168,8 +195,8 @@ GameState::GameState()
             {
                 Tile wall = {};
                 wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
-                wall.position.x = Tile_Size * ((i % 10) - 0.5f);
-                wall.position.z = Tile_Size * (i / 10);
+                TileToWorld(Tile_Size, i % 10, i / 10, &wall.position.x, &wall.position.z);
+                wall.position.x -= Tile_Size * 0.5f;
                 wall.rotation.y = 90.0f;
                 walls.push_back(wall);
             }
@@ -178,8 +205,8 @@ GameState::GameState()
             {
                 Tile wall = {};
                 wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
-                wall.position.x = Tile_Size * (i % 10);
-                wall.position.z = Tile_Size * ((i / 10) + 0.5f);
+                TileToWorld(Tile_Size, i % 10, i / 10, &wall.position.x, &wall.position.z);
+                wall.position.z += Tile_Size * 0.5f;
                 walls.push_back(wall);
             }
 
@@ -187,15 +214,63 @@ GameState::GameState()
             {
                 Tile wall = {};
                 wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
-                wall.position.x = Tile_Size * (i % 10);
-                wall.position.z = Tile_Size * ((i / 10) - 0.5f);
+                TileToWorld(Tile_Size, i % 10, i / 10, &wall.position.x, &wall.position.z);
+                wall.position.z -= Tile_Size * 0.5f;
                 walls.push_back(wall);
             }
 
 
         }
     }
+#endif
 
+    for (int y = 0; y < dungeon.height; ++y)
+    {
+        for (int x = 0; x < dungeon.width; ++x)
+        {
+            if (dungeon.GetTile(x, y) == 1)
+            {
+                if ((x == dungeon.width - 1) || (((x + 1) < dungeon.width) && dungeon.GetTile(x + 1, y) == 0))
+                {
+                    Tile wall = {};
+                    wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
+                    TileToWorld(Tile_Size, x, y, &wall.position.x, &wall.position.z);
+                    wall.position.x += Tile_Size * 0.5f;
+                    wall.rotation.y = 90.0f;
+                    walls.push_back(wall);
+                }
+
+                if ((x == 0) || (((x - 1) >= 0) && dungeon.GetTile(x - 1, y) == 0))
+                {
+                    Tile wall = {};
+                    wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
+                    TileToWorld(Tile_Size, x, y, &wall.position.x, &wall.position.z);
+                    wall.position.x -= Tile_Size * 0.5f;
+                    wall.rotation.y = 90.0f;
+                    walls.push_back(wall);
+                }
+
+                if ((y == dungeon.height - 1) || ((y + 1) < dungeon.height - 1) && dungeon.GetTile(x, y + 1) == 0)
+                {
+                    Tile wall = {};
+                    wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
+                    TileToWorld(Tile_Size, x, y, &wall.position.x, &wall.position.z);
+                    wall.position.z += Tile_Size * 0.5f;
+                    walls.push_back(wall);
+                }
+
+                if ((y == 0) || ((y - 1) >= 0) && dungeon.GetTile(x, y - 1) == 0)
+                {
+                    Tile wall = {};
+                    wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
+                    TileToWorld(Tile_Size, x, y, &wall.position.x, &wall.position.z);
+                    wall.position.z -= Tile_Size * 0.5f;
+                    walls.push_back(wall);
+                }
+
+            }
+        }
+    }
     glEnable(GL_DEPTH_TEST);
 }
 
@@ -239,7 +314,8 @@ void GameState::Update(float dt, const Input& input)
         }
         if (moved_x >= 0 && moved_x < Map_Size && moved_z >= 0 && moved_z < Map_Size)
         {
-            if (tilemap[moved_z * Map_Size + moved_x] == 1)
+            //if (tilemap[moved_z * Map_Size + moved_x] == 1)
+            if (dungeon.GetTile(moved_x, moved_z) == 1)
             {
                 camera_prev_x = camera_x;
                 camera_prev_z = camera_z;

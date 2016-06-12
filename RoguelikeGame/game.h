@@ -26,6 +26,37 @@ struct Tile
     int texture_id = 0;
 };
 
+struct Dungeon
+{
+    int width = 0;
+    int height = 0;
+    int size = 0;
+    int* tile_grid = nullptr;
+
+    ~Dungeon()
+    {
+        delete[] tile_grid;
+        tile_grid = nullptr;
+    }
+
+    int GetTile(int x, int y)
+    {
+        return tile_grid[y * width + x];
+    }
+};
+
+void InitDungeon(Dungeon* dungeon, int width, int height, int* tile_grid)
+{
+    dungeon->width = width;
+    dungeon->height = height;
+    dungeon->size = dungeon->width * dungeon->height;
+    dungeon->tile_grid = new int[dungeon->size]{};
+    memcpy(dungeon->tile_grid, tile_grid, dungeon->size * sizeof(int));
+}
+
+void WorldToTile(int tile_size, float world_x, float world_z, int* tile_x, int* tile_y);
+void TileToWorld(int tile_size, int tile_x, int tile_y, float* world_x, float* world_z);
+
 struct Camera
 {
     Vec3 position = {};
@@ -72,7 +103,8 @@ struct GameState
 
     const int Map_Size = 10;
     const float Tile_Size = 2.0f;
-    int tilemap[100] = {};
+    Dungeon dungeon;
+    //int tilemap[100] = {};
 
     int camera_prev_x = 0;
     int camera_prev_z = 0;
