@@ -1,4 +1,7 @@
 *.opensdf
 *.sdf
 *.suo
+*.user
+*.exe
 Debug/
+Release/
