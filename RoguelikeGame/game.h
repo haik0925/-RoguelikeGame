@@ -127,10 +127,13 @@ struct GameState
     int camera_prev_z = 0;
     int camera_x = 0;
     int camera_z = 0;
+    float camera_prev_rotation = 0.0f;
+    float camera_next_rotation = 0.0f;
     MoveState move_state = MoveState_Idle;
     Direction player_dir = Direction_Front;
     float move_speed = 5.0f;
     float move_t = 0.0f;
+    float rotate_t = 0.0f;
 
     float action_time_limit = 5.0f;
 

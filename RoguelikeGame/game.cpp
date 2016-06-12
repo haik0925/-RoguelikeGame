@@ -444,8 +444,6 @@ void GameState::Update(float dt, const Input& input)
         if (camera_z != camera_prev_z)
             camera.position.z = (Tile_Size * ((camera_prev_z * (1.0f - move_t)) + (camera_z * move_t)));
         break;
-    case MoveState_Rotating:
-        break;
     }
 
 #else
@@ -480,6 +478,7 @@ void GameState::Update(float dt, const Input& input)
                     player_dir = Direction_Front;
                 else
                     player_dir = (Direction)(player_dir + 1);
+                camera_next_rotation = camera.rotation - 90.0f;
             }
             else//left_pressed
             {
@@ -487,8 +486,23 @@ void GameState::Update(float dt, const Input& input)
                     player_dir = Direction_Left;
                 else
                     player_dir = (Direction)(player_dir - 1);
+                camera_next_rotation = camera.rotation + 90.0f;
             }
 
+            camera_prev_rotation = camera.rotation;
+            rotate_t = 0.0f;
+            move_state = MoveState_Rotating;
+        }
+    }
+
+    //TODO: Need to merge to switch statement above
+    if (move_state == MoveState_Rotating)
+    {
+        float rotate_speed = 5.0f;
+        rotate_t += dt * rotate_speed;
+        if (rotate_t >= 1.0f)
+        {
+            rotate_t = 1.0f;
             switch (player_dir)
             {
             case Direction_Front:
@@ -504,6 +518,11 @@ void GameState::Update(float dt, const Input& input)
                 camera.rotation = -270.0f;
                 break;
             }
+            move_state = MoveState_Idle;
+        }
+        else
+        {
+            camera.rotation = camera_prev_rotation * (1.0f - rotate_t) + camera_next_rotation * rotate_t;
         }
     }
 
