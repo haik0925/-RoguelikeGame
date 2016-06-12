@@ -347,43 +347,84 @@ void GameState::Update(float dt, const Input& input)
 
 #if 1
     int movement = 0;
-    if ((input.pressed.up != input.pressed.down) && move_state == MoveState_Idle)
+    if (move_state == MoveState_Idle)
     {
-        if(input.pressed.up)
-            movement = 1;
-        else//down_pressed
-            movement = -1;
+        if (input.pressed.move_front != input.pressed.move_back)
+        {
+            if (input.pressed.move_front)
+                movement = 1;
+            else//move_back
+                movement = -1;
 
-        //int moved_index = 0;
-        int moved_x = camera_x;
-        int moved_z = camera_z;
-        switch(player_dir)
-        {
-        case Direction_Front:
-            moved_z += movement;
-            break;
-        case Direction_Right:
-            moved_x += movement;
-            break;
-        case Direction_Back:
-            moved_z -= movement;
-            break;
-        case Direction_Left:
-            moved_x -= movement;
-            break;
-        }
-        if (moved_x >= 0 && moved_x < Map_Size && moved_z >= 0 && moved_z < Map_Size)
-        {
-            //if (tilemap[moved_z * Map_Size + moved_x] == 1)
-            if (dungeon.GetTile(moved_x, moved_z) > 0)
+            //int moved_index = 0;
+            int moved_x = camera_x;
+            int moved_z = camera_z;
+            switch (player_dir)
             {
-                camera_prev_x = camera_x;
-                camera_prev_z = camera_z;
-                camera_x = moved_x;
-                camera_z = moved_z;
-                move_state = MoveState_Moving;
+            case Direction_Front:
+                moved_z += movement;
+                break;
+            case Direction_Right:
+                moved_x += movement;
+                break;
+            case Direction_Back:
+                moved_z -= movement;
+                break;
+            case Direction_Left:
+                moved_x -= movement;
+                break;
+            }
+            if (moved_x >= 0 && moved_x < Map_Size && moved_z >= 0 && moved_z < Map_Size)
+            {
+                //if (tilemap[moved_z * Map_Size + moved_x] == 1)
+                if (dungeon.GetTile(moved_x, moved_z) > 0)
+                {
+                    camera_prev_x = camera_x;
+                    camera_prev_z = camera_z;
+                    camera_x = moved_x;
+                    camera_z = moved_z;
+                    move_state = MoveState_Moving;
+                }
             }
         }
+
+        if (input.pressed.move_left != input.pressed.move_right)
+        {
+            if (input.pressed.move_right)
+                movement = 1;
+            else//move_right
+                movement = -1;
+
+            //int moved_index = 0;
+            int moved_x = camera_x;
+            int moved_z = camera_z;
+            switch (player_dir)
+            {
+            case Direction_Front:
+                moved_x += movement;
+                break;
+            case Direction_Right:
+                moved_z -= movement;
+                break;
+            case Direction_Back:
+                moved_x -= movement;
+                break;
+            case Direction_Left:
+                moved_z += movement;
+                break;
+            }
+            if (moved_x >= 0 && moved_x < Map_Size && moved_z >= 0 && moved_z < Map_Size)
+            {
+                if (dungeon.GetTile(moved_x, moved_z) > 0)
+                {
+                    camera_prev_x = camera_x;
+                    camera_prev_z = camera_z;
+                    camera_x = moved_x;
+                    camera_z = moved_z;
+                    move_state = MoveState_Moving;
+                }
+            }
+        } 
     }
 
     switch (move_state)
@@ -431,9 +472,9 @@ void GameState::Update(float dt, const Input& input)
 
     if (move_state == MoveState_Idle)
     {
-        if (input.pressed.right != input.pressed.left)
+        if (input.pressed.rotate_right != input.pressed.rotate_left)
         {
-            if (input.pressed.right)
+            if (input.pressed.rotate_right)
             {
                 if (player_dir == Direction_Left)
                     player_dir = Direction_Front;

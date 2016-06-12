@@ -10,12 +10,18 @@
 
 struct Input
 {
-    struct KeyState
+    union KeyState
     {
-        bool left = false;
-        bool right = false;
-        bool up = false;
-        bool down = false;
+        struct
+        {
+            bool rotate_left;
+            bool rotate_right;
+            bool move_left;
+            bool move_right;
+            bool move_front;
+            bool move_back;
+        };
+        bool keys[6];
     };
     KeyState down;
     KeyState pressed;

@@ -127,7 +127,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
             current_time = std::chrono::system_clock::now();
             float dt = 0.0f;
 
-            Input input;
+            Input input = {};
 
             bool running = true;
             while (running)
@@ -136,8 +136,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                 std::chrono::duration<float> duration = current_time - last_time;
                 dt = duration.count();
 
-                input.pressed.left = false; input.pressed.right = false;
-                input.pressed.up = false; input.pressed.down = false;
+                for (bool& key : input.pressed.keys)
+                    key = false;
+                //input.pressed.left = false; input.pressed.right = false;
+                //input.pressed.up = false; input.pressed.down = false;
 
                 SDL_Event e;
                 while (SDL_PollEvent(&e) != 0)
@@ -151,25 +153,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                     case SDL_KEYDOWN:
                         switch (e.key.keysym.sym)
                         {
-                        case SDLK_LEFT:
+                        case SDLK_q:
                             if (e.key.repeat == 0)
-                                input.pressed.left = true;
-                            input.down.left = true;
+                                input.pressed.rotate_left = true;
+                            input.down.rotate_left = true;
                             break;
-                        case SDLK_RIGHT:
+                        case SDLK_e:
                             if (e.key.repeat == 0)
-                                input.pressed.right = true;
-                            input.down.right = true;
+                                input.pressed.rotate_right = true;
+                            input.down.rotate_right = true;
                             break;
-                        case SDLK_UP:
+                        case SDLK_a:
                             if (e.key.repeat == 0)
-                                input.pressed.up = true;
-                            input.down.up = true;
+                                input.pressed.move_left = true;
+                            input.down.move_left = true;
                             break;
-                        case SDLK_DOWN:
+                        case SDLK_d:
                             if (e.key.repeat == 0)
-                                input.pressed.down = true;
-                            input.down.down = true;
+                                input.pressed.move_right = true;
+                            input.down.move_right = true;
+                            break;
+                        case SDLK_w:
+                            if (e.key.repeat == 0)
+                                input.pressed.move_front = true;
+                            input.down.move_front = true;
+                            break;
+                        case SDLK_s:
+                            if (e.key.repeat == 0)
+                                input.pressed.move_back = true;
+                            input.down.move_back = true;
                             break;
                         }
                         break;
@@ -177,17 +189,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                     case SDL_KEYUP:
                         switch (e.key.keysym.sym)
                         {
-                        case SDLK_LEFT:
-                            input.down.left = false;
+                        case SDLK_q:
+                            input.down.rotate_left = false;
                             break;
-                        case SDLK_RIGHT:
-                            input.down.right = false;
+                        case SDLK_e:
+                            input.down.rotate_right = false;
                             break;
-                        case SDLK_UP:
-                            input.down.up = false;
+                        case SDLK_a:
+                            input.down.move_left = false;
                             break;
-                        case SDLK_DOWN:
-                            input.down.down = false;
+                        case SDLK_d:
+                            input.down.move_right = false;
+                            break;
+                        case SDLK_w:
+                            input.down.move_front = false;
+                            break;
+                        case SDLK_s:
+                            input.down.move_back = false;
                             break;
                         }
                         break;
