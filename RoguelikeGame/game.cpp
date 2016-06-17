@@ -44,17 +44,6 @@ Mat4 Camera::GetProjection(float ratio)
     return result;
 }
 
-void WorldToTile(float tile_size, float world_x, float world_z, int* tile_x, int* tile_y)
-{
-    *tile_x = (int)(world_x / tile_size);
-    *tile_y = (int)(world_z / tile_size);
-}
-void TileToWorld(float tile_size, int tile_x, int tile_y, float* world_x, float* world_z)
-{
-    *world_x = tile_x * tile_size;
-    *world_z = tile_y * tile_size;
-}
-
 GameState::GameState()
 {
     glEnable(GL_DEPTH_TEST);
@@ -129,7 +118,7 @@ GameState::GameState()
         1,1,0,0,0,0,1,1,0,1,
         1,1,1,1,1,1,1,1,1,1,
     };
-    InitDungeon(&dungeon, 10, 10, grid);
+    new (&dungeon) Dungeon(10, 10, grid);
 
     floors.reserve(100);
 
@@ -140,11 +129,9 @@ GameState::GameState()
             int tile_value = dungeon.GetTile(x, y);
             if (tile_value > 0)
             {
-                Tile floor = {};
+                Tile floor;
                 TileToWorld(Tile_Size, x, y, &floor.position.x, &floor.position.z);
-                //floor.position.x = Tile_Size * (i % 10);
                 floor.position.y = -(Tile_Size / 2.0f);
-                //floor.position.z = Tile_Size * (i / 10);
                 floor.scale.Set(Tile_Size, Tile_Size, 1.0f);
                 floor.rotation.x = 90.0f;
                 floors.push_back(floor);
@@ -152,7 +139,7 @@ GameState::GameState()
 
             if (tile_value == 2)
             {
-                Enemy enemy = {};
+                Enemy enemy;
                 TileToWorld(Tile_Size, x, y, &enemy.position.x, &enemy.position.z);
                 enemy.position.y = -0.5f;
                 enemy.scale.Set(1.0f, 1.0f, 1.0f);
@@ -170,7 +157,7 @@ GameState::GameState()
             {
                 if ((x == dungeon.width - 1) || (((x + 1) < dungeon.width) && dungeon.GetTile(x + 1, y) == 0))
                 {
-                    Tile wall = {};
+                    Tile wall;
                     wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
                     TileToWorld(Tile_Size, x, y, &wall.position.x, &wall.position.z);
                     wall.position.x += Tile_Size * 0.5f;
@@ -180,7 +167,7 @@ GameState::GameState()
 
                 if ((x == 0) || (((x - 1) >= 0) && dungeon.GetTile(x - 1, y) == 0))
                 {
-                    Tile wall = {};
+                    Tile wall;
                     wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
                     TileToWorld(Tile_Size, x, y, &wall.position.x, &wall.position.z);
                     wall.position.x -= Tile_Size * 0.5f;
@@ -190,7 +177,7 @@ GameState::GameState()
 
                 if ((y == dungeon.height - 1) || ((y + 1) < dungeon.height - 1) && dungeon.GetTile(x, y + 1) == 0)
                 {
-                    Tile wall = {};
+                    Tile wall;
                     wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
                     TileToWorld(Tile_Size, x, y, &wall.position.x, &wall.position.z);
                     wall.position.z += Tile_Size * 0.5f;
@@ -199,7 +186,7 @@ GameState::GameState()
 
                 if ((y == 0) || ((y - 1) >= 0) && dungeon.GetTile(x, y - 1) == 0)
                 {
-                    Tile wall = {};
+                    Tile wall;
                     wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
                     TileToWorld(Tile_Size, x, y, &wall.position.x, &wall.position.z);
                     wall.position.z -= Tile_Size * 0.5f;
@@ -233,7 +220,6 @@ void GameState::Update(float dt, const Input& input)
             else//move_back
                 movement = -1;
 
-            //int moved_index = 0;
             int moved_x = camera_x;
             int moved_z = camera_z;
             switch (player_dir)
@@ -253,7 +239,6 @@ void GameState::Update(float dt, const Input& input)
             }
             if (moved_x >= 0 && moved_x < Map_Size && moved_z >= 0 && moved_z < Map_Size)
             {
-                //if (tilemap[moved_z * Map_Size + moved_x] == 1)
                 if (dungeon.GetTile(moved_x, moved_z) > 0)
                 {
                     camera_prev_x = camera_x;
@@ -272,7 +257,6 @@ void GameState::Update(float dt, const Input& input)
             else//move_right
                 movement = -1;
 
-            //int moved_index = 0;
             int moved_x = camera_x;
             int moved_z = camera_z;
             switch (player_dir)

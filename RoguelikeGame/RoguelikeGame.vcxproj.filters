@@ -6,6 +6,7 @@
     <ClCompile Include="unitybuild.cpp" />
     <ClCompile Include="graphics.cpp" />
     <ClCompile Include="game_math.cpp" />
+    <ClCompile Include="world.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game.h" />
@@ -13,5 +14,6 @@
     <ClInclude Include="graphics.h" />
     <ClInclude Include="platform.h" />
     <ClInclude Include="game_math.h" />
+    <ClInclude Include="world.h" />
   </ItemGroup>
 </Project>
