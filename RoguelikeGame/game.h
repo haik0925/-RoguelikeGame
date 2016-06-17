@@ -57,7 +57,6 @@ struct GameState
     Mat4 projection;
 
 
-    const int Map_Size = 10;
     const float Tile_Size = 2.0f;
     Dungeon dungeon;
 

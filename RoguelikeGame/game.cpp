@@ -105,6 +105,7 @@ GameState::GameState()
     LoadTexture("Texture/wall.png");
     LoadTexture("Texture/enemy.png");
 
+#if 0
     int grid[100] =
     {
         1,1,1,1,1,1,1,1,1,1,
@@ -119,8 +120,25 @@ GameState::GameState()
         1,1,1,1,1,1,1,1,1,1,
     };
     new (&dungeon) Dungeon(10, 10, grid);
+#else
+    int grid[100] =
+    {
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,0,1,0,0,0,0,0,1,
+        1,1,0,1,0,0,0,0,0,1,
+        1,1,0,1,0,0,0,0,0,1,
+        1,1,0,1,0,0,0,0,0,1,
+        2,1,0,1,0,0,0,0,0,1,
+        1,1,0,1,1,1,1,1,0,1,
+        1,1,0,0,0,0,1,1,0,1,
+        1,1,0,0,0,0,1,1,0,1,
+        1,1,1,1,1,1,1,1,1,1,
+    };
+    new (&dungeon) Dungeon(10, 10, grid);
+#endif
 
-    floors.reserve(100);
+
+    floors.reserve(100000);
 
     for (int y = 0; y < dungeon.height; ++y)
     {
@@ -148,7 +166,7 @@ GameState::GameState()
         }
     }
 
-    walls.reserve(100);
+    walls.reserve(100000);
     for (int y = 0; y < dungeon.height; ++y)
     {
         for (int x = 0; x < dungeon.width; ++x)
@@ -240,7 +258,7 @@ void GameState::Update(float dt, const Input& input)
                 moved_x -= movement;
                 break;
             }
-            if (moved_x >= 0 && moved_x < Map_Size && moved_z >= 0 && moved_z < Map_Size)
+            if (moved_x >= 0 && moved_x < dungeon.width && moved_z >= 0 && moved_z < dungeon.height)
             {
                 if (dungeon.GetTile(moved_x, moved_z) > 0)
                 {
@@ -277,7 +295,7 @@ void GameState::Update(float dt, const Input& input)
                 moved_z += movement;
                 break;
             }
-            if (moved_x >= 0 && moved_x < Map_Size && moved_z >= 0 && moved_z < Map_Size)
+            if (moved_x >= 0 && moved_x < dungeon.width && moved_z >= 0 && moved_z < dungeon.height)
             {
                 if (dungeon.GetTile(moved_x, moved_z) > 0)
                 {
