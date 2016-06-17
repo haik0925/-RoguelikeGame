@@ -34,7 +34,7 @@ struct Camera
 {
     Vec3 position = {};
     float rotation = 0.0f;
-    float fov = 70.0f;
+    float fov = 70.0f;//TODO: Need to adjust fov value
     float far_plane = 15.0f;
     float near_plane = 0.1f;
 
@@ -82,6 +82,7 @@ struct GameState
     ~GameState();
 
     void Update(float dt, const Input& input);
+
     void Render(float screenRatio);
 };
 

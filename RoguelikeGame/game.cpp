@@ -231,101 +231,156 @@ GameState::~GameState()
 void GameState::Update(float dt, const Input& input)
 {
 #if 1
-    int movement = 0;
-    if (move_state == MoveState_Idle)
-    {
-        if (input.pressed.move_front != input.pressed.move_back)
-        {
-            if (input.pressed.move_front)
-                movement = 1;
-            else//move_back
-                movement = -1;
-
-            int moved_x = camera_x;
-            int moved_z = camera_z;
-            switch (player_dir)
-            {
-            case Direction_Front:
-                moved_z += movement;
-                break;
-            case Direction_Right:
-                moved_x += movement;
-                break;
-            case Direction_Back:
-                moved_z -= movement;
-                break;
-            case Direction_Left:
-                moved_x -= movement;
-                break;
-            }
-            if (moved_x >= 0 && moved_x < dungeon.width && moved_z >= 0 && moved_z < dungeon.height)
-            {
-                if (dungeon.GetTile(moved_x, moved_z) > 0)
-                {
-                    camera_prev_x = camera_x;
-                    camera_prev_z = camera_z;
-                    camera_x = moved_x;
-                    camera_z = moved_z;
-                    move_state = MoveState_Moving;
-                }
-            }
-        }
-
-        if (input.pressed.move_left != input.pressed.move_right)
-        {
-            if (input.pressed.move_right)
-                movement = 1;
-            else//move_right
-                movement = -1;
-
-            int moved_x = camera_x;
-            int moved_z = camera_z;
-            switch (player_dir)
-            {
-            case Direction_Front:
-                moved_x += movement;
-                break;
-            case Direction_Right:
-                moved_z -= movement;
-                break;
-            case Direction_Back:
-                moved_x -= movement;
-                break;
-            case Direction_Left:
-                moved_z += movement;
-                break;
-            }
-            if (moved_x >= 0 && moved_x < dungeon.width && moved_z >= 0 && moved_z < dungeon.height)
-            {
-                if (dungeon.GetTile(moved_x, moved_z) > 0)
-                {
-                    camera_prev_x = camera_x;
-                    camera_prev_z = camera_z;
-                    camera_x = moved_x;
-                    camera_z = moved_z;
-                    move_state = MoveState_Moving;
-                }
-            }
-        } 
-    }
-
     switch (move_state)
     {
-    case MoveState_Idle:
-        move_t = 0.0f;
-        break;
-    case MoveState_Moving:
-        move_t += move_speed * dt;
-        if (move_t >= 1.0f)
+        case MoveState_Idle:
         {
-            move_t = 1.0f;
-            move_state = MoveState_Idle;
-        }
-        if (camera_x != camera_prev_x)
-            camera.position.x = (Tile_Size * ((camera_prev_x * (1.0f - move_t)) + (camera_x * move_t)));
-        if (camera_z != camera_prev_z)
-            camera.position.z = (Tile_Size * ((camera_prev_z * (1.0f - move_t)) + (camera_z * move_t)));
-        break;
+            int movement = 0;
+            if (input.pressed.move_front != input.pressed.move_back)
+            {
+                if (input.pressed.move_front)
+                    movement = 1;
+                else//move_back
+                    movement = -1;
+
+                int moved_x = camera_x;
+                int moved_z = camera_z;
+                switch (player_dir)
+                {
+                case Direction_Front:
+                    moved_z += movement;
+                    break;
+                case Direction_Right:
+                    moved_x += movement;
+                    break;
+                case Direction_Back:
+                    moved_z -= movement;
+                    break;
+                case Direction_Left:
+                    moved_x -= movement;
+                    break;
+                }
+                if (moved_x >= 0 && moved_x < dungeon.width && moved_z >= 0 && moved_z < dungeon.height)
+                {
+                    if (dungeon.GetTile(moved_x, moved_z) > 0)
+                    {
+                        camera_prev_x = camera_x;
+                        camera_prev_z = camera_z;
+                        camera_x = moved_x;
+                        camera_z = moved_z;
+                        move_state = MoveState_Moving;
+                    }
+                }
+            }
+
+            if (input.pressed.move_left != input.pressed.move_right)
+            {
+                if (input.pressed.move_right)
+                    movement = 1;
+                else//move_right
+                    movement = -1;
+
+                int moved_x = camera_x;
+                int moved_z = camera_z;
+                switch (player_dir)
+                {
+                case Direction_Front:
+                    moved_x += movement;
+                    break;
+                case Direction_Right:
+                    moved_z -= movement;
+                    break;
+                case Direction_Back:
+                    moved_x -= movement;
+                    break;
+                case Direction_Left:
+                    moved_z += movement;
+                    break;
+                }
+                if (moved_x >= 0 && moved_x < dungeon.width && moved_z >= 0 && moved_z < dungeon.height)
+                {
+                    if (dungeon.GetTile(moved_x, moved_z) > 0)
+                    {
+                        camera_prev_x = camera_x;
+                        camera_prev_z = camera_z;
+                        camera_x = moved_x;
+                        camera_z = moved_z;
+                        move_state = MoveState_Moving;
+                    }
+                }
+            } 
+
+            if (input.pressed.rotate_right != input.pressed.rotate_left)
+            {
+                if (input.pressed.rotate_right)
+                {
+                    if (player_dir == Direction_Left)
+                        player_dir = Direction_Front;
+                    else
+                        player_dir = (Direction)(player_dir + 1);
+                    camera_next_rotation = camera.rotation - 90.0f;
+                }
+                else//left_pressed
+                {
+                    if (player_dir == Direction_Front)
+                        player_dir = Direction_Left;
+                    else
+                        player_dir = (Direction)(player_dir - 1);
+                    camera_next_rotation = camera.rotation + 90.0f;
+                }
+
+                camera_prev_rotation = camera.rotation;
+                rotate_t = 0.0f;
+                move_state = MoveState_Rotating;
+            }
+
+            move_t = 0.0f;
+        } break;
+
+        case MoveState_Moving:
+        {
+            move_t += move_speed * dt;
+            if (move_t >= 1.0f)
+            {
+                move_t = 1.0f;
+                move_state = MoveState_Idle;
+            }
+            if (camera_x != camera_prev_x)
+                camera.position.x = (Tile_Size * ((camera_prev_x * (1.0f - move_t)) + (camera_x * move_t)));
+            if (camera_z != camera_prev_z)
+                camera.position.z = (Tile_Size * ((camera_prev_z * (1.0f - move_t)) + (camera_z * move_t)));
+        } break;
+
+        case MoveState_Rotating:
+        {
+            float rotate_speed = 5.0f;
+            rotate_t += dt * rotate_speed;
+            if (rotate_t >= 1.0f)
+            {
+                rotate_t = 1.0f;
+                switch (player_dir)
+                {
+                case Direction_Front:
+                    camera.rotation = 0.0f;
+                    break;
+                case Direction_Right:
+                    camera.rotation = -90.0f;
+                    break;
+                case Direction_Back:
+                    camera.rotation = -180.0f;
+                    break;
+                case Direction_Left:
+                    camera.rotation = -270.0f;
+                    break;
+                }
+                move_state = MoveState_Idle;
+            }
+            else
+            {
+                camera.rotation = camera_prev_rotation * (1.0f - rotate_t) + camera_next_rotation * rotate_t;
+            }
+        } break;
+
     }
 
 #else
@@ -333,88 +388,25 @@ void GameState::Update(float dt, const Input& input)
     float rotation_radian = ToRadian(camera.rotation);
     Vec3 go(-sin(rotation_radian), 0.0f, cos(rotation_radian));
     float speed = 10.0f;
-    if(input.down.up)
+    if(input.down.move_front)
     {
         camera.position.x += go.x * speed * dt;
         camera.position.y += go.y * speed * dt;
         camera.position.z += go.z * speed * dt;
     }
-    if(input.down.down)
+    if(input.down.move_back)
     {
         camera.position.x -= go.x * speed * dt;
         camera.position.y -= go.y * speed * dt;
         camera.position.z -= go.z * speed * dt;
     }
-#endif
 
-#define MOVE_MODE 0
-#if MOVE_MODE == 0
-
-    if (move_state == MoveState_Idle)
-    {
-        if (input.pressed.rotate_right != input.pressed.rotate_left)
-        {
-            if (input.pressed.rotate_right)
-            {
-                if (player_dir == Direction_Left)
-                    player_dir = Direction_Front;
-                else
-                    player_dir = (Direction)(player_dir + 1);
-                camera_next_rotation = camera.rotation - 90.0f;
-            }
-            else//left_pressed
-            {
-                if (player_dir == Direction_Front)
-                    player_dir = Direction_Left;
-                else
-                    player_dir = (Direction)(player_dir - 1);
-                camera_next_rotation = camera.rotation + 90.0f;
-            }
-
-            camera_prev_rotation = camera.rotation;
-            rotate_t = 0.0f;
-            move_state = MoveState_Rotating;
-        }
-    }
-
-    //TODO: Need to merge to switch statement above
-    if (move_state == MoveState_Rotating)
-    {
-        float rotate_speed = 5.0f;
-        rotate_t += dt * rotate_speed;
-        if (rotate_t >= 1.0f)
-        {
-            rotate_t = 1.0f;
-            switch (player_dir)
-            {
-            case Direction_Front:
-                camera.rotation = 0.0f;
-                break;
-            case Direction_Right:
-                camera.rotation = -90.0f;
-                break;
-            case Direction_Back:
-                camera.rotation = -180.0f;
-                break;
-            case Direction_Left:
-                camera.rotation = -270.0f;
-                break;
-            }
-            move_state = MoveState_Idle;
-        }
-        else
-        {
-            camera.rotation = camera_prev_rotation * (1.0f - rotate_t) + camera_next_rotation * rotate_t;
-        }
-    }
-
-#else
     float rotation_speed = 180.0f;
-    if(input.down.right)
+    if(input.down.move_right)
     {
         camera.rotation -= rotation_speed * dt;
     }
-    if(input.down.left)
+    if(input.down.move_left)
     {
         camera.rotation += rotation_speed * dt;
     }
@@ -432,8 +424,6 @@ void GameState::Update(float dt, const Input& input)
     else if (camera.rotation >= 225.0f && camera.rotation < 315.0f)
         player_dir = Direction_Right;
 #endif
-
-
 
     //Enemies rotate along the camera.
     float cam_rotation = camera.rotation;
