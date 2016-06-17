@@ -200,6 +200,10 @@ GameState::GameState()
 
 GameState::~GameState()
 {
+    for (auto texture_id : textures)
+    {
+        glDeleteTextures(1, &texture_id);
+    }
     glDeleteProgram(shader_program);
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
