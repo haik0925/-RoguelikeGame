@@ -129,7 +129,7 @@ GameState::GameState()
             int tile_value = dungeon.GetTile(x, y);
             if (tile_value > 0)
             {
-                Tile floor;
+                Entity floor;
                 TileToWorld(Tile_Size, x, y, &floor.position.x, &floor.position.z);
                 floor.position.y = -(Tile_Size / 2.0f);
                 floor.scale.Set(Tile_Size, Tile_Size, 1.0f);
@@ -139,7 +139,7 @@ GameState::GameState()
 
             if (tile_value == 2)
             {
-                Enemy enemy;
+                Entity enemy;
                 TileToWorld(Tile_Size, x, y, &enemy.position.x, &enemy.position.z);
                 enemy.position.y = -0.5f;
                 enemy.scale.Set(1.0f, 1.0f, 1.0f);
@@ -157,7 +157,7 @@ GameState::GameState()
             {
                 if ((x == dungeon.width - 1) || (((x + 1) < dungeon.width) && dungeon.GetTile(x + 1, y) == 0))
                 {
-                    Tile wall;
+                    Entity wall;
                     wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
                     TileToWorld(Tile_Size, x, y, &wall.position.x, &wall.position.z);
                     wall.position.x += Tile_Size * 0.5f;
@@ -167,7 +167,7 @@ GameState::GameState()
 
                 if ((x == 0) || (((x - 1) >= 0) && dungeon.GetTile(x - 1, y) == 0))
                 {
-                    Tile wall;
+                    Entity wall;
                     wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
                     TileToWorld(Tile_Size, x, y, &wall.position.x, &wall.position.z);
                     wall.position.x -= Tile_Size * 0.5f;
@@ -177,7 +177,7 @@ GameState::GameState()
 
                 if ((y == dungeon.height - 1) || ((y + 1) < dungeon.height - 1) && dungeon.GetTile(x, y + 1) == 0)
                 {
-                    Tile wall;
+                    Entity wall;
                     wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
                     TileToWorld(Tile_Size, x, y, &wall.position.x, &wall.position.z);
                     wall.position.z += Tile_Size * 0.5f;
@@ -186,7 +186,7 @@ GameState::GameState()
 
                 if ((y == 0) || ((y - 1) >= 0) && dungeon.GetTile(x, y - 1) == 0)
                 {
-                    Tile wall;
+                    Entity wall;
                     wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
                     TileToWorld(Tile_Size, x, y, &wall.position.x, &wall.position.z);
                     wall.position.z -= Tile_Size * 0.5f;
@@ -208,7 +208,6 @@ GameState::~GameState()
 
 void GameState::Update(float dt, const Input& input)
 {
-
 #if 1
     int movement = 0;
     if (move_state == MoveState_Idle)
@@ -413,11 +412,14 @@ void GameState::Update(float dt, const Input& input)
 #endif
 
 
+
+    //Enemies rotate along the camera.
+    float cam_rotation = camera.rotation;
+    for (auto& enemy : enemies) { enemy.rotation.y = cam_rotation; }
 }
 
 void GameState::Render(float screenRatio)
 {
-
     Mat4 view = camera.GetView();
     Mat4 projection = camera.GetProjection(screenRatio);
 
@@ -427,6 +429,7 @@ void GameState::Render(float screenRatio)
     auto model_location = glGetUniformLocation(shader_program, "model");
     auto view_location = glGetUniformLocation(shader_program, "view");
     auto projection_location = glGetUniformLocation(shader_program, "projection");
+    auto texture_location = glGetUniformLocation(shader_program, "our_texture");
     //auto color_location = glGetUniformLocation(shader_program, "color");
     glUseProgram(shader_program);
     glUniformMatrix4fv(view_location, 1, GL_TRUE, view.m);
@@ -434,87 +437,28 @@ void GameState::Render(float screenRatio)
     glBindVertexArray(vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textures[0]);
-    glUniform1i(glGetUniformLocation(shader_program, "our_texture"), 0);
-    for (auto& floor : floors)
-    {
-        RenderTile(floor, model_location);
-    }
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, textures[1]);
-    glUniform1i(glGetUniformLocation(shader_program, "our_texture"), 1);
-    for (auto& wall : walls)
-    {
-        RenderTile(wall, model_location);
-    }
 
+    OpenGLRenderSingleTextureEntities(floors.data(),
+                                      floors.size(),
+                                      model_location,
+                                      textures[0],
+                                      texture_location);
+
+    OpenGLRenderSingleTextureEntities(walls.data(),
+                                      walls.size(),
+                                      model_location,
+                                      textures[1],
+                                      texture_location);
+
+    // Render translucent objects
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    float camera_rotation = camera.rotation;
-    for (auto& enemy : enemies)
-    {
-        RenderEnemy(enemy, camera_rotation, model_location);
-    }
+
+    OpenGLRenderSingleTextureEntities(enemies.data(),
+                                      enemies.size(),
+                                      model_location,
+                                      textures[2],
+                                      texture_location);
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-}
-
-void GameState::RenderTile(const Tile& tile, int model_location)
-{
-    Mat4 model;
-    Mat4 rotation = Identity();
-
-    {
-        float c = cos(ToRadian(tile.rotation.x));
-        float s = sin(ToRadian(tile.rotation.x));
-        Mat4 rotation_x =
-        {
-            1.f, 0.f, 0.f, 0.f,
-            0.f, c, -s, 0.f,
-            0.f, s, c, 0.f,
-            0.f, 0.f, 0.f, 1.f
-        };
-        rotation *= rotation_x;
-    }
-
-    {
-        float c = cos(ToRadian(tile.rotation.y));
-        float s = sin(ToRadian(tile.rotation.y));
-        Mat4 rotation_y = 
-        {
-            c, 0.f, -s, 0.f,
-            0.f, 1.f, 0.f, 0.f,
-            s, 0.f, c, 0.f,
-            0.f, 0.f, 0.f, 1.f
-        };
-        rotation *= rotation_y;
-    }
-
-    model =
-        Translation(tile.position.x, tile.position.y, tile.position.z) *
-        rotation *
-        Scale(tile.scale.x, tile.scale.y, tile.scale.z);
-    glUniformMatrix4fv(model_location, 1, GL_TRUE, model.m);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-}
-
-void GameState::RenderEnemy(const Enemy& enemy, float face_angle, int model_location)
-{
-    float c = cos(ToRadian(face_angle));
-    float s = sin(ToRadian(face_angle));
-    Mat4 rotation = 
-    {
-        c, 0.f, -s, 0.f,
-        0.f, 1.f, 0.f, 0.f,
-        s, 0.f, c, 0.f,
-        0.f, 0.f, 0.f, 1.f
-    };
-
-    Mat4 model =
-        Translation(enemy.position.x, enemy.position.y, enemy.position.z) *
-        rotation *
-        Scale(enemy.scale.x, enemy.scale.y, enemy.scale.z);
-
-    glBindTexture(GL_TEXTURE_2D, textures[2]);
-    glUniformMatrix4fv(model_location, 1, GL_TRUE, model.m);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }

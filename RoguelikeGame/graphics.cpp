@@ -1,6 +1,7 @@
 #include "graphics.h"
 #include "definitions.h"
 #include "platform.h"
+#include "world.h"
 #include <cstdlib>
 
 bool OpenGLCreateShader(GLenum shader_type, const char* shader_filename, GLuint* out_shader_id)
@@ -74,5 +75,59 @@ bool OpenGLCreateProgram(const char* vert_name, const char* frag_name, GLuint* p
     else
     {
         return false;
+    }
+}
+
+void OpenGLRenderSingleTextureEntities(const Entity* entities, int count, int model_location, int texture_id, int texture_location)
+{
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    glUniform1i(texture_location, 0);//GL_TEXTURE0
+
+    for (int i = 0; i < count; ++i)
+    {
+        Mat4 model;
+        const Entity& e = entities[i];
+
+        float c = cos(ToRadian(e.rotation.x));
+        float s = sin(ToRadian(e.rotation.x));
+        Mat4 rotation_x =
+        {
+            1.f, 0.f, 0.f, 0.f,
+            0.f, c, -s, 0.f,
+            0.f, s, c, 0.f,
+            0.f, 0.f, 0.f, 1.f
+        };
+
+        c = cos(ToRadian(e.rotation.y));
+        s = sin(ToRadian(e.rotation.y));
+        Mat4 rotation_y =
+        {
+            c, 0.f, -s, 0.f,
+            0.f, 1.f, 0.f, 0.f,
+            s, 0.f, c, 0.f,
+            0.f, 0.f, 0.f, 1.f
+        };
+
+#if 0//TODO: Not used yet. Use this when has to be used.
+
+        c = cos(ToRadian(e.rotation.y));
+        s = sin(ToRadian(e.rotation.y));
+        float c = cos(ToRadian(e.rotation.y));
+        float s = sin(ToRadian(e.rotation.y));
+        Mat4 rotation_z =
+        {
+            c, s, 0.f, 0.f,
+            -s, c, 0.f, 0.f,
+            0.f, 0.f, 1.f, 0.f,
+            0.f, 0.f, 0.f, 1.f
+        };
+#endif
+        model =
+            Translation(e.position.x, e.position.y, e.position.z) *
+            rotation_x *
+            rotation_y *
+            Scale(e.scale.x, e.scale.y, e.scale.z);
+        glUniformMatrix4fv(model_location, 1, GL_TRUE, model.m);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     }
 }

@@ -56,14 +56,14 @@ struct GameState
     Mat4 view;
     Mat4 projection;
 
-    std::vector<Tile> floors;
-    std::vector<Tile> walls;
 
     const int Map_Size = 10;
     const float Tile_Size = 2.0f;
     Dungeon dungeon;
 
-    std::vector<Enemy> enemies;
+    std::vector<Entity> floors;
+    std::vector<Entity> walls;
+    std::vector<Entity> enemies;
 
     int camera_prev_x = 0;
     int camera_prev_z = 0;
@@ -84,8 +84,6 @@ struct GameState
 
     void Update(float dt, const Input& input);
     void Render(float screenRatio);
-    void RenderTile(const Tile& tile, int model_location);
-    void RenderEnemy(const Enemy& enemy, float face_angle, int model_location);
 };
 
 #pragma warning(pop)
