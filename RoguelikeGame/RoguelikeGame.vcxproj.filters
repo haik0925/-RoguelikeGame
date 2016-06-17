@@ -15,5 +15,6 @@
     <ClInclude Include="platform.h" />
     <ClInclude Include="game_math.h" />
     <ClInclude Include="world.h" />
+    <ClInclude Include="player.h" />
   </ItemGroup>
 </Project>

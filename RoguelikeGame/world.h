@@ -59,19 +59,4 @@ struct Enemy
     {}
 };
 
-enum MoveState
-{
-    MoveState_Moving,
-    MoveState_Idle,
-    MoveState_Rotating
-};
-
-enum Direction
-{
-    Direction_Front = 0,
-    Direction_Right,
-    Direction_Back,
-    Direction_Left,
-};
-
-#endif
+#endif//ENTITY_H

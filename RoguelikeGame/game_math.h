@@ -9,7 +9,9 @@ float ToDegree(float radian);
 struct Vec3
 {
     float x, y, z;
-    explicit Vec3(float x = 0.0f, float y = 0.0f, float z = 0.0f)
+
+    explicit
+    Vec3(float x = 0.0f, float y = 0.0f, float z = 0.0f)
         : x(x), y(y), z(z) {}
 
     void Set(float x, float y, float z)
@@ -27,7 +29,8 @@ struct Vec2
 {
     float x, y;
 
-    explicit Vec2(float x = 0.0f, float y = 0.0f)
+    explicit
+    Vec2(float x = 0.0f, float y = 0.0f)
         : x(x), y(y) {}
 
     void Set(float x, float y)
