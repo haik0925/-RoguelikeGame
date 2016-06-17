@@ -22,7 +22,7 @@ typedef int64_t i64;
 #define GLOBAL static
 #define LOCAL_PERSIST static
 
-#define ASSERT(exp) {if(!exp){int* a = 0; *a = 0;}}
+#define ASSERT(exp) {if(!(exp)){int* a = 0; *a = 0;}}
 
 #define ARRAY_SIZE(arr) sizeof(arr) / sizeof(arr[0])
 

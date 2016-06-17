@@ -4,6 +4,7 @@
 #include "game_math.h"
 #include "definitions.h"
 #include <vector>
+#include <unordered_map>
 #pragma warning(push)
 #pragma warning(disable: 4512)
 #pragma warning(disable: 4351)
@@ -119,7 +120,6 @@ struct GameState
     const int Map_Size = 10;
     const float Tile_Size = 2.0f;
     Dungeon dungeon;
-    //int tilemap[100] = {};
 
     std::vector<Enemy> enemies;
 

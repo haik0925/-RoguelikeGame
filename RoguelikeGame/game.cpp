@@ -116,66 +116,6 @@ GameState::GameState()
     LoadTexture("Texture/wall.png");
     LoadTexture("Texture/enemy.png");
 
-#if 0
-    {
-        int sheet_w;
-        int sheet_h;
-        int sheet_bpp;
-        auto* rgb = stbi_load("Texture/floor.png", &sheet_w, &sheet_h, &sheet_bpp, 3);
-        GLuint texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, sheet_w, sheet_h, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        stbi_image_free(rgb);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        textures.push_back(texture);
-    }
-
-    {
-        int sheet_w;
-        int sheet_h;
-        int sheet_bpp;
-        auto* rgb = stbi_load("Texture/wall.png", &sheet_w, &sheet_h, &sheet_bpp, 3);
-        GLuint texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, sheet_w, sheet_h, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        stbi_image_free(rgb);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        textures.push_back(texture);
-    }
-
-    {
-        int sheet_w;
-        int sheet_h;
-        int sheet_bpp;
-        auto* rgb = stbi_load("Texture/enemy.png", &sheet_w, &sheet_h, &sheet_bpp, 3);
-        GLuint texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, sheet_w, sheet_h, 0, GL_RGB, GL_UNSIGNED_BYTE, rgb);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        stbi_image_free(rgb);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        textures.push_back(texture);
-    }
-#endif
-
-
     int grid[100] =
     {
         1,1,1,1,1,1,1,1,1,1,
@@ -192,23 +132,7 @@ GameState::GameState()
     InitDungeon(&dungeon, 10, 10, grid);
 
     floors.reserve(100);
-#if 0
-    for (int i = 0; i < ARRAY_SIZE(tilemap); ++i)
-    {
-        tilemap[i] = grid[i];
-        if (tilemap[i] == 1)
-        {
-            Tile floor = {};
-            TileToWorld(Tile_Size, i % 10, i / 10, &floor.position.x, &floor.position.z);
-            //floor.position.x = Tile_Size * (i % 10);
-            floor.position.y = -(Tile_Size / 2.0f);
-            //floor.position.z = Tile_Size * (i / 10);
-            floor.scale.Set(Tile_Size, Tile_Size, 1.0f);
-            floor.rotation.x = 90.0f;
-            floors.push_back(floor);
-        }
-    }
-#endif
+
     for (int y = 0; y < dungeon.height; ++y)
     {
         for (int x = 0; x < dungeon.width; ++x)
@@ -238,54 +162,6 @@ GameState::GameState()
     }
 
     walls.reserve(100);
-#if 0
-    for (int i = 0; i < ARRAY_SIZE(tilemap); ++i)
-    {
-        if (tilemap[i] == 1)
-        {
-            if ((i % 10 == 9) || ((i + 1) < ARRAY_SIZE(tilemap)) && tilemap[i + 1] == 0)
-            {
-                Tile wall = {};
-                wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
-                TileToWorld(Tile_Size, i % 10, i / 10, &wall.position.x, &wall.position.z);
-                wall.position.x += Tile_Size * 0.5f;
-                wall.rotation.y = 90.0f;
-                walls.push_back(wall);
-            }
-
-            if ((i % 10 == 0) || (((i - 1) >= 0) && tilemap[i - 1] == 0))
-            {
-                Tile wall = {};
-                wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
-                TileToWorld(Tile_Size, i % 10, i / 10, &wall.position.x, &wall.position.z);
-                wall.position.x -= Tile_Size * 0.5f;
-                wall.rotation.y = 90.0f;
-                walls.push_back(wall);
-            }
-
-            if ((i / 10 == 9) || ((i + 10) < ARRAY_SIZE(tilemap)) && tilemap[i + 10] == 0)
-            {
-                Tile wall = {};
-                wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
-                TileToWorld(Tile_Size, i % 10, i / 10, &wall.position.x, &wall.position.z);
-                wall.position.z += Tile_Size * 0.5f;
-                walls.push_back(wall);
-            }
-
-            if ((i / 10 == 0) || ((i - 10) >= 0) && tilemap[i - 10] == 0)
-            {
-                Tile wall = {};
-                wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
-                TileToWorld(Tile_Size, i % 10, i / 10, &wall.position.x, &wall.position.z);
-                wall.position.z -= Tile_Size * 0.5f;
-                walls.push_back(wall);
-            }
-
-
-        }
-    }
-#endif
-
     for (int y = 0; y < dungeon.height; ++y)
     {
         for (int x = 0; x < dungeon.width; ++x)

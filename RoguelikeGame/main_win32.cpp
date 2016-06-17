@@ -119,7 +119,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     if (Win32Init(1024, 768, &window, &context))
     {
         {
-            GameState game_state;
+            //GameState game_state;
+            GameState* game_state = new GameState;
 
             // Timer
             std::chrono::time_point<std::chrono::system_clock> last_time, current_time;
@@ -212,17 +213,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                     }
                 }
 
-                game_state.Update(dt, input);
+                game_state->Update(dt, input);
 
                 Win32Dimension dim(window);
 
                 glViewport(0, 0, dim.width, dim.height);
-                game_state.Render((float)dim.width / (float)dim.height);
+                game_state->Render((float)dim.width / (float)dim.height);
 
                 SDL_GL_SwapWindow(window);
 
                 last_time = current_time;
             }
+
+            delete game_state; game_state = nullptr;
+
         }
 
         Win32Shutdown(window, context);
