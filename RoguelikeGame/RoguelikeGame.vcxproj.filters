@@ -16,5 +16,6 @@
     <ClInclude Include="game_math.h" />
     <ClInclude Include="world.h" />
     <ClInclude Include="player.h" />
+    <ClInclude Include="arrays.h" />
   </ItemGroup>
 </Project>

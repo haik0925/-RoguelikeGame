@@ -121,20 +121,11 @@ GameState::GameState()
     };
     new (&dungeon) Dungeon(10, 10, grid);
 #else
-    int grid[100] =
+    int grid[10] =
     {
-        1,1,1,1,1,1,1,1,1,1,
-        1,1,0,1,0,0,0,0,0,1,
-        1,1,0,1,0,0,0,0,0,1,
-        1,1,0,1,0,0,0,0,0,1,
-        1,1,0,1,0,0,0,0,0,1,
-        2,1,0,1,0,0,0,0,0,1,
-        1,1,0,1,1,1,1,1,0,1,
-        1,1,0,0,0,0,1,1,0,1,
-        1,1,0,0,0,0,1,1,0,1,
-        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,2,
     };
-    new (&dungeon) Dungeon(10, 10, grid);
+    new (&dungeon) Dungeon(1, 10, grid);
 #endif
 
 
@@ -155,6 +146,7 @@ GameState::GameState()
                 floors.push_back(floor);
             }
 
+#if 0
             if (tile_value == 2)
             {
                 Entity enemy;
@@ -163,6 +155,7 @@ GameState::GameState()
                 enemy.scale.Set(1.0f, 1.0f, 1.0f);
                 enemies.push_back(enemy);
             }
+#endif
         }
     }
 
@@ -214,6 +207,11 @@ GameState::GameState()
             }
         }
     }
+
+    enemy.position.y = -0.5f;
+    TileToWorld(Tile_Size, 0, 9, &enemy.position.x, &enemy.position.z);
+    enemy_x = 0;
+    enemy_y = 9;
 }
 
 GameState::~GameState()
@@ -230,7 +228,6 @@ GameState::~GameState()
 
 void GameState::Update(float dt, const Input& input)
 {
-#if 1
     switch (move_state)
     {
         case MoveState_Idle:
@@ -383,8 +380,101 @@ void GameState::Update(float dt, const Input& input)
 
     }
 
-#else
+    action_timer += dt;
+    if (action_timer >= action_time_limit)
+    {
+        //do action
+        if (enemy_y > 0)
+        {
+            --enemy_y;
+            enemy_move_t = 0.0f;
+            enemy_src_pos.x = enemy.position.x;
+            enemy_src_pos.y = enemy.position.z;
+            TileToWorld(Tile_Size, enemy_x, enemy_y, &enemy_dest_pos.x, &enemy_dest_pos.y);
+            enemy_is_moving = true;
+        }
 
+        action_timer = 0.0f;
+    }
+
+    if (enemy_is_moving)
+    {
+        enemy_move_t += dt;
+        if (enemy_move_t >= 1.0f)
+        {
+            enemy_move_t = 1.0f;
+            enemy.position.x = enemy_dest_pos.x;
+            enemy.position.z = enemy_dest_pos.y;
+            enemy_is_moving = false;
+        }
+        else
+        {
+            enemy.position.x = enemy_src_pos.x * (1.0f - enemy_move_t) + enemy_dest_pos.x * enemy_move_t;
+            enemy.position.z = enemy_src_pos.y * (1.0f - enemy_move_t) + enemy_dest_pos.y * enemy_move_t;
+        }
+    }
+
+    //Enemies rotate along the camera.
+    //float cam_rotation = camera.rotation;
+    //for (auto& enemy : enemies) { enemy.rotation.y = cam_rotation; }
+    enemy.rotation.y = camera.rotation;
+}
+
+void GameState::Render(float screenRatio)
+{
+    Mat4 view = camera.GetView();
+    Mat4 projection = camera.GetProjection(screenRatio);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    auto model_location = glGetUniformLocation(shader_program, "model");
+    auto view_location = glGetUniformLocation(shader_program, "view");
+    auto projection_location = glGetUniformLocation(shader_program, "projection");
+    auto texture_location = glGetUniformLocation(shader_program, "our_texture");
+    //auto color_location = glGetUniformLocation(shader_program, "color");
+    glUseProgram(shader_program);
+    glUniformMatrix4fv(view_location, 1, GL_TRUE, view.m);
+    glUniformMatrix4fv(projection_location, 1, GL_TRUE, projection.m);
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glActiveTexture(GL_TEXTURE0);
+
+    OpenGLRenderSingleTextureEntities(floors.data(),
+                                      floors.size(),
+                                      model_location,
+                                      textures[0],
+                                      texture_location);
+
+    OpenGLRenderSingleTextureEntities(walls.data(),
+                                      walls.size(),
+                                      model_location,
+                                      textures[1],
+                                      texture_location);
+
+    // Render translucent objects
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+#if 0
+    OpenGLRenderSingleTextureEntities(enemies.data(),
+                                      enemies.size(),
+                                      model_location,
+                                      textures[2],
+                                      texture_location);
+#endif
+    OpenGLRenderSingleTextureEntities(&enemy,
+                                      1,
+                                      model_location,
+                                      textures[2],
+                                      texture_location);
+
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
+void GameState::DebugUpdate(float dt, const Input& input)
+{
     float rotation_radian = ToRadian(camera.rotation);
     Vec3 go(-sin(rotation_radian), 0.0f, cos(rotation_radian));
     float speed = 10.0f;
@@ -423,54 +513,4 @@ void GameState::Update(float dt, const Input& input)
         player_dir = Direction_Back;
     else if (camera.rotation >= 225.0f && camera.rotation < 315.0f)
         player_dir = Direction_Right;
-#endif
-
-    //Enemies rotate along the camera.
-    float cam_rotation = camera.rotation;
-    for (auto& enemy : enemies) { enemy.rotation.y = cam_rotation; }
-}
-
-void GameState::Render(float screenRatio)
-{
-    Mat4 view = camera.GetView();
-    Mat4 projection = camera.GetProjection(screenRatio);
-
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    auto model_location = glGetUniformLocation(shader_program, "model");
-    auto view_location = glGetUniformLocation(shader_program, "view");
-    auto projection_location = glGetUniformLocation(shader_program, "projection");
-    auto texture_location = glGetUniformLocation(shader_program, "our_texture");
-    //auto color_location = glGetUniformLocation(shader_program, "color");
-    glUseProgram(shader_program);
-    glUniformMatrix4fv(view_location, 1, GL_TRUE, view.m);
-    glUniformMatrix4fv(projection_location, 1, GL_TRUE, projection.m);
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glActiveTexture(GL_TEXTURE0);
-
-    OpenGLRenderSingleTextureEntities(floors.data(),
-                                      floors.size(),
-                                      model_location,
-                                      textures[0],
-                                      texture_location);
-
-    OpenGLRenderSingleTextureEntities(walls.data(),
-                                      walls.size(),
-                                      model_location,
-                                      textures[1],
-                                      texture_location);
-
-    // Render translucent objects
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    OpenGLRenderSingleTextureEntities(enemies.data(),
-                                      enemies.size(),
-                                      model_location,
-                                      textures[2],
-                                      texture_location);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
 }

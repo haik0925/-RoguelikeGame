@@ -149,6 +149,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="arrays.h" />
     <ClInclude Include="definitions.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="world.h" />

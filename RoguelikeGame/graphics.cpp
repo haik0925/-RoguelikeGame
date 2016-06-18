@@ -3,6 +3,7 @@
 #include "platform.h"
 #include "world.h"
 #include <cstdlib>
+#include <cmath>
 
 bool OpenGLCreateShader(GLenum shader_type, const char* shader_filename, GLuint* out_shader_id)
 {
