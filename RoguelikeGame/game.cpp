@@ -105,26 +105,27 @@ GameState::GameState()
     LoadTexture("Texture/wall.png");
     LoadTexture("Texture/enemy.png");
 
-#if 0
-    int grid[100] =
+#if 1
+    u8 grid[100] =
     {
         1,1,1,1,1,1,1,1,1,1,
-        1,1,0,1,0,0,0,0,0,1,
-        1,1,0,1,0,0,0,0,0,1,
-        1,1,0,1,0,0,0,0,0,1,
-        1,1,0,1,0,0,0,0,0,1,
-        2,1,0,1,0,0,0,0,0,1,
-        1,1,0,1,1,1,1,1,0,1,
-        1,1,0,0,0,0,1,1,0,1,
-        1,1,0,0,0,0,1,1,0,1,
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,
+        1,1,1,1,1,1,1,1,1,1,
         1,1,1,1,1,1,1,1,1,1,
     };
-    new (&dungeon) Dungeon(10, 10, grid);
+    new (&dungeon) Dungeon(10, 10, (TileType*)grid);
 #else
-    int grid[10] =
-    {
-        1,1,1,1,1,1,1,1,1,2,
-    };
+    TileType grid[10] = {};
+    /*{
+        //1,1,1,1,1,1,1,1,1,2,
+    };*/
+    for (auto& tile : grid){ tile = Tile_Floor; }
     new (&dungeon) Dungeon(1, 10, grid);
 #endif
 
@@ -208,10 +209,39 @@ GameState::GameState()
         }
     }
 
+#if 0
     enemy.position.y = -0.5f;
     enemy_move.tile_x = 0;
     enemy_move.tile_y = 9;
     TileToWorld(Tile_Size, enemy_move.tile_x, enemy_move.tile_y, &enemy.position.x, &enemy.position.z);
+#endif
+
+    auto CreateTileMovement = [this](int tile_x, int tile_y, Handle h)
+    {
+        auto& move = tile_movements.Create(h);
+        move.tile_x = tile_x;
+        move.tile_y = tile_y;
+        move.dungeon = &dungeon;
+        auto tile_index = TileToIndex(tile_x, tile_y, dungeon.width);
+        dungeon.existence_grid[tile_index] = true;
+        dungeon.entity_grid[tile_index] = h;
+    };
+
+    player = handle_manager.Create();
+    CreateTileMovement(0, 0, player);
+
+    auto CreateEntity = [&CreateTileMovement, this](int tile_x, int tile_y) -> Handle
+    {
+        auto h = handle_manager.Create();
+        auto& e = entities.Create(h);
+        CreateTileMovement(tile_x, tile_y, h);
+        TileToWorld(Tile_Size, tile_x, tile_y, &e.position.x, &e.position.z);
+        e.position.y = -0.5f;
+
+        return h;
+    };
+
+    enemies.push_back(CreateEntity(0, 9));
 }
 
 GameState::~GameState()
@@ -250,6 +280,7 @@ void GameState::Update(float dt, const Input& input)
 
             if (is_moving)
             {
+                auto& player_move = tile_movements.Get(player);
                 int moved_x = player_move.tile_x;
                 int moved_z = player_move.tile_y;
                 switch (player_dir)
@@ -310,6 +341,7 @@ void GameState::Update(float dt, const Input& input)
 
         case MoveState_Moving:
         {
+            auto& player_move = tile_movements.Get(player);
             if (player_move.UpdateMovement(dt, &camera.position.x, &camera.position.z))
                 move_state = MoveState_Idle;
         } break;
@@ -350,17 +382,52 @@ void GameState::Update(float dt, const Input& input)
     if (action_timer >= action_time_limit)
     {
         //do action
+#if 0
         if (enemy_move.tile_y > 0)
         {
             enemy_move.SetPositionToMove(Tile_Size, enemy_move.tile_x, enemy_move.tile_y - 1);
         }
+#endif
+        for (auto& enemy_handle : enemies)
+        {
+            auto& enemy_move = tile_movements.Get(enemy_handle);
+            if (enemy_move.tile_y > 0)
+            {
+                enemy_move.SetPositionToMove(Tile_Size, enemy_move.tile_x, enemy_move.tile_y - 1);
+            }
+        }
 
         action_timer = 0.0f;
     }
-    if (enemy_move.active) { enemy_move.UpdateMovement(dt, &enemy.position.x, &enemy.position.z); }
+    //if (enemy_move.active) { enemy_move.UpdateMovement(dt, &enemy.position.x, &enemy.position.z); }
+    for (auto& enemy_handle : enemies)
+    {
+        auto& enemy_move = tile_movements.Get(enemy_handle);
+        auto& enemy_entity = entities.Get(enemy_handle);
+        if (enemy_move.active) { enemy_move.UpdateMovement(dt, &enemy_entity.position.x, &enemy_entity.position.z); }
+        enemy_entity.rotation.y = camera.rotation;
+    }
+
+    if (input.pressed.move_left ||
+        input.pressed.move_right ||
+        input.pressed.move_front ||
+        input.pressed.move_back)
+    {
+        for (int y = 0; y < dungeon.height; ++y)
+        {
+            for (int x = 0; x < dungeon.width; ++x)
+            {
+                DEBUG_LOG("%d ", dungeon.existence_grid[TileToIndex(x, y, dungeon.width)]);
+            }
+            DEBUG_LOG("\n");
+        }
+        DEBUG_LOG("\n");
+        DEBUG_LOG("\n");
+        DEBUG_LOG("\n");
+    }
 
     //Enemies rotate along the camera.
-    enemy.rotation.y = camera.rotation;
+    //enemy.rotation.y = camera.rotation;
 }
 
 void GameState::Render(float screenRatio)
@@ -405,11 +472,21 @@ void GameState::Render(float screenRatio)
                                       textures[2],
                                       texture_location);
 #endif
+#if 0
     OpenGLRenderSingleTextureEntities(&enemy,
                                       1,
                                       model_location,
                                       textures[2],
                                       texture_location);
+#endif
+    for (auto& enemy_handle : enemies)
+    {
+        OpenGLRenderSingleTextureEntities(&entities.Get(enemy_handle),
+                                          1,
+                                          model_location,
+                                          textures[2],
+                                          texture_location);
+    }
 
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);

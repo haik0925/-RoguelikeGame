@@ -26,15 +26,20 @@ namespace std
     };
 }
 
-/*Component Manager template*/
+/*Component Manager base class template.*/
 template<typename Component>
-struct Manager
+struct ComponentManager
 {
     static const int Max_Count = 10;
     Component data[Max_Count] = {};
     Handle owner[Max_Count] = {};
     int current_count = 0;
     std::unordered_map<Handle, int> map;//Handle, Component index
+
+    ComponentManager() = default;
+    virtual ~ComponentManager() = default;
+    ComponentManager(const ComponentManager&) = delete;
+    ComponentManager& operator=(const ComponentManager&) = delete;
 
     Component& Get(Handle h)
     {
@@ -69,6 +74,7 @@ struct Manager
             map.erase(h);
         }
     }
+
 };
 
 struct HandleManager

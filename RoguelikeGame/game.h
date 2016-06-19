@@ -59,15 +59,20 @@ struct TileMovement
     float t = 0.0f;
     const float speed = 5.0f;
     bool active = false;
+    Dungeon* dungeon = nullptr;
 
     void SetPositionToMove(const float Tile_Size, int new_tile_x, int new_tile_y)
     {
-        TileToWorld(Tile_Size, tile_x, tile_y, &from.x, &from.y);
-        TileToWorld(Tile_Size, new_tile_x, new_tile_y, &to.x, &to.y);
-        tile_x = new_tile_x;
-        tile_y = new_tile_y;
-        t = 0.0f;
-        active = true;
+        if (dungeon->IsEntityExist(new_tile_x, new_tile_y) == false)
+        {
+            dungeon->MoveEntity(tile_x, tile_y, new_tile_x, new_tile_y);
+            TileToWorld(Tile_Size, tile_x, tile_y, &from.x, &from.y);
+            TileToWorld(Tile_Size, new_tile_x, new_tile_y, &to.x, &to.y);
+            tile_x = new_tile_x;
+            tile_y = new_tile_y;
+            t = 0.0f;
+            active = true;
+        }
     }
 
     // Returns true when the action is completed
@@ -89,6 +94,10 @@ struct TileMovement
     }
 };
 
+struct TileMovements
+    : public ComponentManager < TileMovement >
+{
+};
 
 struct GameState
 {
@@ -109,10 +118,14 @@ struct GameState
 
     std::vector<Entity> floors;
     std::vector<Entity> walls;
-    //std::vector<Entity> enemies;
-    Entity enemy;
+    //Entity enemy;
+    HandleManager handle_manager;
+    Entities entities;
+    TileMovements tile_movements;
+    std::vector<Handle> enemies;
 
-    TileMovement player_move;
+    Handle player;
+    //TileMovement player_move;
     MoveState move_state = MoveState_Idle;
     float camera_prev_rotation = 0.0f;
     float camera_next_rotation = 0.0f;
@@ -122,8 +135,8 @@ struct GameState
     float rotate_t = 0.0f;
 
     float action_timer = 0.0f;
-    float action_time_limit = 2.0f;
-    TileMovement enemy_move;
+    const float action_time_limit = 10.0f;
+    //TileMovement enemy_move;
 
     GameState();
     ~GameState();

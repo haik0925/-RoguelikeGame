@@ -2,6 +2,7 @@
 #define ENTITY_H
 #include "definitions.h"
 #include "game_math.h"
+#include "handle.h"
 
 struct Entity
 {
@@ -21,4 +22,10 @@ struct Entity
          , texture_id(texture_id)
     {}
 };
+
+struct Entities
+    : ComponentManager<Entity>
+{
+};
+
 #endif//ENTITY_H
