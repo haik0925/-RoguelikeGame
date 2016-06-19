@@ -6,4 +6,6 @@
 #include "graphics.cpp"
 #include "main_win32.cpp"
 #include "world.cpp"
+#include "entity.cpp"
+#include "handle.cpp"
 #pragma warning(pop)

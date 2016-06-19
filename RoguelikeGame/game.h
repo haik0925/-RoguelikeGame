@@ -4,6 +4,7 @@
 #include "game_math.h"
 #include "definitions.h"
 #include "world.h"
+#include "entity.h"
 #include "player.h"
 #include <vector>
 #include <unordered_map>

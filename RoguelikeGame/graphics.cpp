@@ -1,7 +1,7 @@
 #include "graphics.h"
 #include "definitions.h"
 #include "platform.h"
-#include "world.h"
+#include "entity.h"
 #include <cstdlib>
 #include <cmath>
 

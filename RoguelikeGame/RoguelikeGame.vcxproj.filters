@@ -7,6 +7,8 @@
     <ClCompile Include="graphics.cpp" />
     <ClCompile Include="game_math.cpp" />
     <ClCompile Include="world.cpp" />
+    <ClCompile Include="entity.cpp" />
+    <ClCompile Include="handle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game.h" />
@@ -17,5 +19,7 @@
     <ClInclude Include="world.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="arrays.h" />
+    <ClInclude Include="entity.h" />
+    <ClInclude Include="handle.h" />
   </ItemGroup>
 </Project>

@@ -117,10 +117,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="entity.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Unitybuild_Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="graphics.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Unitybuild_Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="handle.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Unitybuild_Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="main_win32.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
@@ -151,6 +157,8 @@
   <ItemGroup>
     <ClInclude Include="arrays.h" />
     <ClInclude Include="definitions.h" />
+    <ClInclude Include="entity.h" />
+    <ClInclude Include="handle.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="world.h" />
     <ClInclude Include="game.h">
