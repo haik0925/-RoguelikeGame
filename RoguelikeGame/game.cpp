@@ -209,9 +209,9 @@ GameState::GameState()
     }
 
     enemy.position.y = -0.5f;
-    TileToWorld(Tile_Size, 0, 9, &enemy.position.x, &enemy.position.z);
-    enemy_x = 0;
-    enemy_y = 9;
+    enemy_move.tile_x = 0;
+    enemy_move.tile_y = 9;
+    TileToWorld(Tile_Size, enemy_move.tile_x, enemy_move.tile_y, &enemy.position.x, &enemy.position.z);
 }
 
 GameState::~GameState()
@@ -232,80 +232,54 @@ void GameState::Update(float dt, const Input& input)
     {
         case MoveState_Idle:
         {
-            int movement = 0;
+            int movement_front = 0;
+            int movement_right = 0;
+            bool is_moving = false;
+
             if (input.pressed.move_front != input.pressed.move_back)
             {
-                if (input.pressed.move_front)
-                    movement = 1;
-                else//move_back
-                    movement = -1;
-
-                int moved_x = camera_x;
-                int moved_z = camera_z;
-                switch (player_dir)
-                {
-                case Direction_Front:
-                    moved_z += movement;
-                    break;
-                case Direction_Right:
-                    moved_x += movement;
-                    break;
-                case Direction_Back:
-                    moved_z -= movement;
-                    break;
-                case Direction_Left:
-                    moved_x -= movement;
-                    break;
-                }
-                if (moved_x >= 0 && moved_x < dungeon.width && moved_z >= 0 && moved_z < dungeon.height)
-                {
-                    if (dungeon.GetTile(moved_x, moved_z) > 0)
-                    {
-                        camera_prev_x = camera_x;
-                        camera_prev_z = camera_z;
-                        camera_x = moved_x;
-                        camera_z = moved_z;
-                        move_state = MoveState_Moving;
-                    }
-                }
+                is_moving = true;
+                movement_front = input.pressed.move_front ? 1 : -1;
             }
 
             if (input.pressed.move_left != input.pressed.move_right)
             {
-                if (input.pressed.move_right)
-                    movement = 1;
-                else//move_right
-                    movement = -1;
+                is_moving = true;
+                movement_right = input.pressed.move_right ? 1 : -1;
+            }
 
-                int moved_x = camera_x;
-                int moved_z = camera_z;
+            if (is_moving)
+            {
+                int moved_x = player_move.tile_x;
+                int moved_z = player_move.tile_y;
                 switch (player_dir)
                 {
                 case Direction_Front:
-                    moved_x += movement;
+                    moved_x += movement_right;
+                    moved_z += movement_front;
                     break;
                 case Direction_Right:
-                    moved_z -= movement;
+                    moved_x += movement_front;
+                    moved_z -= movement_right;
                     break;
                 case Direction_Back:
-                    moved_x -= movement;
+                    moved_x -= movement_right;
+                    moved_z -= movement_front;
                     break;
                 case Direction_Left:
-                    moved_z += movement;
+                    moved_x -= movement_front;
+                    moved_z += movement_right;
                     break;
                 }
-                if (moved_x >= 0 && moved_x < dungeon.width && moved_z >= 0 && moved_z < dungeon.height)
+
+                if (dungeon.IsInside(moved_x, moved_z) && dungeon.GetTile(moved_x, moved_z) > 0)
                 {
-                    if (dungeon.GetTile(moved_x, moved_z) > 0)
-                    {
-                        camera_prev_x = camera_x;
-                        camera_prev_z = camera_z;
-                        camera_x = moved_x;
-                        camera_z = moved_z;
-                        move_state = MoveState_Moving;
-                    }
+                    player_move.SetPositionToMove(Tile_Size, moved_x, moved_z);
+                    action_timer = action_time_limit;
+                    move_state = MoveState_Moving;
+                    break;
                 }
-            } 
+            }
 
             if (input.pressed.rotate_right != input.pressed.rotate_left)
             {
@@ -327,25 +301,17 @@ void GameState::Update(float dt, const Input& input)
                 }
 
                 camera_prev_rotation = camera.rotation;
-                rotate_t = 0.0f;
                 move_state = MoveState_Rotating;
+                rotate_t = 0.0f;
+                break;
             }
 
-            move_t = 0.0f;
         } break;
 
         case MoveState_Moving:
         {
-            move_t += move_speed * dt;
-            if (move_t >= 1.0f)
-            {
-                move_t = 1.0f;
+            if (player_move.UpdateMovement(dt, &camera.position.x, &camera.position.z))
                 move_state = MoveState_Idle;
-            }
-            if (camera_x != camera_prev_x)
-                camera.position.x = (Tile_Size * ((camera_prev_x * (1.0f - move_t)) + (camera_x * move_t)));
-            if (camera_z != camera_prev_z)
-                camera.position.z = (Tile_Size * ((camera_prev_z * (1.0f - move_t)) + (camera_z * move_t)));
         } break;
 
         case MoveState_Rotating:
@@ -374,7 +340,7 @@ void GameState::Update(float dt, const Input& input)
             }
             else
             {
-                camera.rotation = camera_prev_rotation * (1.0f - rotate_t) + camera_next_rotation * rotate_t;
+                Interpolate(camera_prev_rotation, camera_next_rotation, rotate_t, &camera.rotation);
             }
         } break;
 
@@ -384,39 +350,16 @@ void GameState::Update(float dt, const Input& input)
     if (action_timer >= action_time_limit)
     {
         //do action
-        if (enemy_y > 0)
+        if (enemy_move.tile_y > 0)
         {
-            --enemy_y;
-            enemy_move_t = 0.0f;
-            enemy_src_pos.x = enemy.position.x;
-            enemy_src_pos.y = enemy.position.z;
-            TileToWorld(Tile_Size, enemy_x, enemy_y, &enemy_dest_pos.x, &enemy_dest_pos.y);
-            enemy_is_moving = true;
+            enemy_move.SetPositionToMove(Tile_Size, enemy_move.tile_x, enemy_move.tile_y - 1);
         }
 
         action_timer = 0.0f;
     }
-
-    if (enemy_is_moving)
-    {
-        enemy_move_t += dt;
-        if (enemy_move_t >= 1.0f)
-        {
-            enemy_move_t = 1.0f;
-            enemy.position.x = enemy_dest_pos.x;
-            enemy.position.z = enemy_dest_pos.y;
-            enemy_is_moving = false;
-        }
-        else
-        {
-            enemy.position.x = enemy_src_pos.x * (1.0f - enemy_move_t) + enemy_dest_pos.x * enemy_move_t;
-            enemy.position.z = enemy_src_pos.y * (1.0f - enemy_move_t) + enemy_dest_pos.y * enemy_move_t;
-        }
-    }
+    if (enemy_move.active) { enemy_move.UpdateMovement(dt, &enemy.position.x, &enemy.position.z); }
 
     //Enemies rotate along the camera.
-    //float cam_rotation = camera.rotation;
-    //for (auto& enemy : enemies) { enemy.rotation.y = cam_rotation; }
     enemy.rotation.y = camera.rotation;
 }
 

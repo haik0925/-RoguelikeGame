@@ -18,9 +18,15 @@ struct Dungeon
         tile_grid = nullptr;
     }
 
-    int GetTile(int x, int y)
+    int GetTile(int tile_x, int tile_y)
     {
-        return tile_grid[y * width + x];
+        return tile_grid[tile_y * width + tile_x];
+    }
+
+    bool IsInside(int tile_x, int tile_y)
+    {
+        return((tile_x >= 0) && (tile_x < width) &&
+               (tile_y >= 0) && (tile_y < height));
     }
 };
 

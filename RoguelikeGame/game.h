@@ -42,19 +42,52 @@ struct Camera
     Mat4 GetProjection(float ratio);
 };
 
-struct MoveAction
+INTERNAL
+inline
+void Interpolate(float from, float to, float t, float* result)
 {
-    int origin_tile_x = 0;
-    int origin_tile_y = 0;
-    int dest_tile_x = 0;
-    int dest_tile_y = 0;
+    *result = from * (1.0f - t) + to * t;
+}
+
+struct TileMovement
+{
+    int tile_x = 0;
+    int tile_y = 0;
     Vec2 from;
     Vec2 to;
-    //float duration = ;
-    float speed = 5.0f;
     float t = 0.0f;
-    bool is_active = false;
+    const float speed = 5.0f;
+    bool active = false;
+
+    void SetPositionToMove(const float Tile_Size, int new_tile_x, int new_tile_y)
+    {
+        TileToWorld(Tile_Size, tile_x, tile_y, &from.x, &from.y);
+        TileToWorld(Tile_Size, new_tile_x, new_tile_y, &to.x, &to.y);
+        tile_x = new_tile_x;
+        tile_y = new_tile_y;
+        t = 0.0f;
+        active = true;
+    }
+
+    // Returns true when the action is completed
+    bool UpdateMovement(float dt, float* x, float* y)
+    {
+        bool result = false;
+
+        t += (speed * dt);
+        if (t >= 1.0f)
+        {
+            t = 1.0f;
+            result = true;
+        }
+        Interpolate(from.x, to.x, t, x);
+        Interpolate(from.y, to.y, t, y);
+        active = !result;
+
+        return result;
+    }
 };
+
 
 struct GameState
 {
@@ -78,27 +111,18 @@ struct GameState
     //std::vector<Entity> enemies;
     Entity enemy;
 
-    //MoveAction player_move;
-    int camera_prev_x = 0;
-    int camera_prev_z = 0;
-    int camera_x = 0;
-    int camera_z = 0;
+    TileMovement player_move;
+    MoveState move_state = MoveState_Idle;
     float camera_prev_rotation = 0.0f;
     float camera_next_rotation = 0.0f;
-    MoveState move_state = MoveState_Idle;
     Direction player_dir = Direction_Front;
-    float move_speed = 5.0f;
-    float move_t = 0.0f;
+    int player_dir_x = 0;
+    int player_dir_y = 1;
     float rotate_t = 0.0f;
 
     float action_timer = 0.0f;
-    float action_time_limit = 5.0f;
-    int enemy_x;
-    int enemy_y;
-    Vec2 enemy_src_pos;
-    Vec2 enemy_dest_pos;
-    float enemy_move_t = 0.0f;
-    bool enemy_is_moving = false;
+    float action_time_limit = 2.0f;
+    TileMovement enemy_move;
 
     GameState();
     ~GameState();
