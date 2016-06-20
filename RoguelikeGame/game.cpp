@@ -122,7 +122,6 @@ GameState::GameState()
 
     drawables_opaque.reserve(100000);
     drawables_translucent.reserve(100000);
-    //floors.reserve(100000);
 
     for (int y = 0; y < dungeon.height; ++y)
     {
@@ -133,20 +132,30 @@ GameState::GameState()
             {
                 auto floor = handle_manager.Create();
                 auto& floor_entity = entities.Create(floor);
-                //Entity floor;
                 TileToWorld(Tile_Size, x, y, &floor_entity.position.x, &floor_entity.position.z);
                 floor_entity.position.y = -(Tile_Size / 2.0f);
                 floor_entity.scale.Set(Tile_Size, Tile_Size, 1.0f);
                 floor_entity.rotation.x = 90.0f;
                 auto& floor_sprite = opaque_sprites.Create(floor);
                 floor_sprite.texture_id = textures[0];
-                //floors.push_back(floor);
                 drawables_opaque.push_back(floor);
             }
         }
     }
 
-    //walls.reserve(100000);
+    auto CreateWall = [this](int tile_x, int tile_y) -> Entity&
+    {
+        auto h = handle_manager.Create();
+        Entity& e = entities.Create(h);
+        e.scale.Set(Tile_Size, Tile_Size, 1.0f);
+        TileToWorld(Tile_Size, tile_x, tile_y, &e.position.x, &e.position.z);
+        auto& sprite = opaque_sprites.Create(h);
+        sprite.texture_id = textures[1];
+        drawables_opaque.push_back(h);
+
+        return e;
+    };
+
     for (int y = 0; y < dungeon.height; ++y)
     {
         for (int x = 0; x < dungeon.width; ++x)
@@ -155,56 +164,28 @@ GameState::GameState()
             {
                 if ((x == dungeon.width - 1) || (((x + 1) < dungeon.width) && dungeon.GetTile(x + 1, y) == 0))
                 {
-                    auto wall = handle_manager.Create();
-                    auto& wall_entity = entities.Create(wall);
-                    wall_entity.scale.Set(Tile_Size, Tile_Size, 1.0f);
-                    TileToWorld(Tile_Size, x, y, &wall_entity.position.x, &wall_entity.position.z);
+                    auto& wall_entity = CreateWall(x, y);
                     wall_entity.position.x += Tile_Size * 0.5f;
                     wall_entity.rotation.y = 90.0f;
-                    auto& wall_sprite = opaque_sprites.Create(wall);
-                    wall_sprite.texture_id = textures[1];
-                    //walls.push_back(wall);
-                    drawables_opaque.push_back(wall);
                 }
 
                 if ((x == 0) || (((x - 1) >= 0) && dungeon.GetTile(x - 1, y) == 0))
                 {
-                    auto wall = handle_manager.Create();
-                    auto& wall_entity = entities.Create(wall);
-                    wall_entity.scale.Set(Tile_Size, Tile_Size, 1.0f);
-                    TileToWorld(Tile_Size, x, y, &wall_entity.position.x, &wall_entity.position.z);
+                    auto& wall_entity = CreateWall(x, y);
                     wall_entity.position.x -= Tile_Size * 0.5f;
                     wall_entity.rotation.y = 90.0f;
-                    auto& wall_sprite = opaque_sprites.Create(wall);
-                    wall_sprite.texture_id = textures[1];
-                    //walls.push_back(wall);
-                    drawables_opaque.push_back(wall);
                 }
 
                 if ((y == dungeon.height - 1) || ((y + 1) < dungeon.height - 1) && dungeon.GetTile(x, y + 1) == 0)
                 {
-                    auto wall = handle_manager.Create();
-                    auto& wall_entity = entities.Create(wall);
-                    wall_entity.scale.Set(Tile_Size, Tile_Size, 1.0f);
-                    TileToWorld(Tile_Size, x, y, &wall_entity.position.x, &wall_entity.position.z);
+                    auto& wall_entity = CreateWall(x, y);
                     wall_entity.position.z += Tile_Size * 0.5f;
-                    auto& wall_sprite = opaque_sprites.Create(wall);
-                    wall_sprite.texture_id = textures[1];
-                    //walls.push_back(wall);
-                    drawables_opaque.push_back(wall);
                 }
 
                 if ((y == 0) || ((y - 1) >= 0) && dungeon.GetTile(x, y - 1) == 0)
                 {
-                    auto wall = handle_manager.Create();
-                    auto& wall_entity = entities.Create(wall);
-                    wall_entity.scale.Set(Tile_Size, Tile_Size, 1.0f);
-                    TileToWorld(Tile_Size, x, y, &wall_entity.position.x, &wall_entity.position.z);
+                    auto& wall_entity = CreateWall(x, y);
                     wall_entity.position.z -= Tile_Size * 0.5f;
-                    auto& wall_sprite = opaque_sprites.Create(wall);
-                    wall_sprite.texture_id = textures[1];
-                    //walls.push_back(wall);
-                    drawables_opaque.push_back(wall);
                 }
 
             }
@@ -440,39 +421,8 @@ void GameState::Render(float screenRatio)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glActiveTexture(GL_TEXTURE0);
 
-#if 0
-    OpenGLRenderSingleTextureEntities(floors.data(),
-                                      floors.size(),
-                                      model_location,
-                                      textures[0],
-                                      texture_location);
-
-    OpenGLRenderSingleTextureEntities(walls.data(),
-                                      walls.size(),
-                                      model_location,
-                                      textures[1],
-                                      texture_location);
-#endif
-#if 0
-    for (auto& floor : floors)
-    {
-        OpenGLRenderSingleTextureEntities(&entities.Get(floor),
-                                          1,
-                                          model_location,
-                                          textures[0],
-                                          texture_location);
-    }
-    for (auto& wall : walls)
-    {
-        OpenGLRenderSingleTextureEntities(&entities.Get(wall),
-                                          1,
-                                          model_location,
-                                          textures[1],
-                                          texture_location);
-    }
-#endif
+    //TODO: need to sort opaque sprites by texture ids.
     OpenGLDrawOpaque(drawables_opaque.data(), drawables_opaque.size(), entities, opaque_sprites, model_location, texture_location);
-
 
     // Render translucent objects
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
