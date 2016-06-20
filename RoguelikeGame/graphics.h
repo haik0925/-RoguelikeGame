@@ -17,4 +17,12 @@ void OpenGLDrawOpaque(const Handle* handles, int count,
                       ComponentManager<OpaqueSprite>& opaque_sprites,
                       int model_location, int texture_location);
 
+//TODO: This function has same code with DrawOpaque function.
+//      Is it necessary to have separate function for translucent sprites?
+void OpenGLDrawTranslucent(const Handle* handles, int count,
+                           ComponentManager<Entity>& entities,
+                           ComponentManager<TranslucentSprite>& translucent_sprites,
+                           int model_location, int texture_location);
+
+
 #endif//GRAPHICS_H

@@ -213,7 +213,7 @@ GameState::GameState()
         CreateTileMovement(tile_x, tile_y, h);
         TileToWorld(Tile_Size, tile_x, tile_y, &e.position.x, &e.position.z);
         e.position.y = -0.5f;
-        auto& enemy_sprite = opaque_sprites.Create(h);
+        auto& enemy_sprite = translucent_sprites.Create(h);
         enemy_sprite.texture_id = textures[2];
 
         return h;
@@ -422,19 +422,18 @@ void GameState::Render(float screenRatio)
     glActiveTexture(GL_TEXTURE0);
 
     //TODO: need to sort opaque sprites by texture ids.
-    OpenGLDrawOpaque(drawables_opaque.data(), drawables_opaque.size(), entities, opaque_sprites, model_location, texture_location);
+    OpenGLDrawOpaque(drawables_opaque.data(),
+                     drawables_opaque.size(),
+                     entities, opaque_sprites,
+                     model_location, texture_location);
 
     // Render translucent objects
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    for (auto& enemy_handle : enemies)
-    {
-        OpenGLRenderSingleTextureEntities(&entities.Get(enemy_handle),
-                                          1,
-                                          model_location,
-                                          textures[2],
-                                          texture_location);
-    }
+    OpenGLDrawTranslucent(drawables_translucent.data(),
+                          drawables_translucent.size(),
+                          entities, translucent_sprites,
+                          model_location, texture_location);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindVertexArray(0);

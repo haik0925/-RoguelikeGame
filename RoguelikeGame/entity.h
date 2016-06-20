@@ -30,7 +30,7 @@ struct Color3
 struct OpaqueSprite
 {
     int texture_id;
-    Color3 color;
+    //Color3 color;//TODO: Not used yet.
 };
 
 struct Color4
@@ -44,7 +44,7 @@ struct Color4
 struct TranslucentSprite
 {
     int texture_id;
-    Color4 color;
+    //Color4 color;//TODO: Not used yet.
 };
 
 #endif//ENTITY_H
