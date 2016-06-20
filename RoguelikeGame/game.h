@@ -94,11 +94,6 @@ struct TileMovement
     }
 };
 
-struct TileMovements
-    : public ComponentManager < TileMovement >
-{
-};
-
 struct GameState
 {
     float quad[32] = {};
@@ -116,13 +111,19 @@ struct GameState
     const float Tile_Size = 2.0f;
     Dungeon dungeon;
 
-    std::vector<Entity> floors;
-    std::vector<Entity> walls;
-    //Entity enemy;
     HandleManager handle_manager;
-    Entities entities;
-    TileMovements tile_movements;
+    ComponentManager<Entity>            entities;
+    ComponentManager<OpaqueSprite>      opaque_sprites;
+    ComponentManager<TranslucentSprite> translucent_sprites;
+    ComponentManager<TileMovement>      tile_movements;
+
+    /*
+    std::vector<Handle> floors;
+    std::vector<Handle> walls;
+    */
     std::vector<Handle> enemies;
+    std::vector<Handle> drawables_opaque;
+    std::vector<Handle> drawables_translucent;
 
     Handle player;
     //TileMovement player_move;

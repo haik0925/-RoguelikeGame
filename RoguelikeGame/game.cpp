@@ -105,7 +105,6 @@ GameState::GameState()
     LoadTexture("Texture/wall.png");
     LoadTexture("Texture/enemy.png");
 
-#if 1
     u8 grid[100] =
     {
         1,1,1,1,1,1,1,1,1,1,
@@ -120,17 +119,10 @@ GameState::GameState()
         1,1,1,1,1,1,1,1,1,1,
     };
     new (&dungeon) Dungeon(10, 10, (TileType*)grid);
-#else
-    TileType grid[10] = {};
-    /*{
-        //1,1,1,1,1,1,1,1,1,2,
-    };*/
-    for (auto& tile : grid){ tile = Tile_Floor; }
-    new (&dungeon) Dungeon(1, 10, grid);
-#endif
 
-
-    floors.reserve(100000);
+    drawables_opaque.reserve(100000);
+    drawables_translucent.reserve(100000);
+    //floors.reserve(100000);
 
     for (int y = 0; y < dungeon.height; ++y)
     {
@@ -139,28 +131,22 @@ GameState::GameState()
             int tile_value = dungeon.GetTile(x, y);
             if (tile_value > 0)
             {
-                Entity floor;
-                TileToWorld(Tile_Size, x, y, &floor.position.x, &floor.position.z);
-                floor.position.y = -(Tile_Size / 2.0f);
-                floor.scale.Set(Tile_Size, Tile_Size, 1.0f);
-                floor.rotation.x = 90.0f;
-                floors.push_back(floor);
+                auto floor = handle_manager.Create();
+                auto& floor_entity = entities.Create(floor);
+                //Entity floor;
+                TileToWorld(Tile_Size, x, y, &floor_entity.position.x, &floor_entity.position.z);
+                floor_entity.position.y = -(Tile_Size / 2.0f);
+                floor_entity.scale.Set(Tile_Size, Tile_Size, 1.0f);
+                floor_entity.rotation.x = 90.0f;
+                auto& floor_sprite = opaque_sprites.Create(floor);
+                floor_sprite.texture_id = textures[0];
+                //floors.push_back(floor);
+                drawables_opaque.push_back(floor);
             }
-
-#if 0
-            if (tile_value == 2)
-            {
-                Entity enemy;
-                TileToWorld(Tile_Size, x, y, &enemy.position.x, &enemy.position.z);
-                enemy.position.y = -0.5f;
-                enemy.scale.Set(1.0f, 1.0f, 1.0f);
-                enemies.push_back(enemy);
-            }
-#endif
         }
     }
 
-    walls.reserve(100000);
+    //walls.reserve(100000);
     for (int y = 0; y < dungeon.height; ++y)
     {
         for (int x = 0; x < dungeon.width; ++x)
@@ -169,52 +155,61 @@ GameState::GameState()
             {
                 if ((x == dungeon.width - 1) || (((x + 1) < dungeon.width) && dungeon.GetTile(x + 1, y) == 0))
                 {
-                    Entity wall;
-                    wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
-                    TileToWorld(Tile_Size, x, y, &wall.position.x, &wall.position.z);
-                    wall.position.x += Tile_Size * 0.5f;
-                    wall.rotation.y = 90.0f;
-                    walls.push_back(wall);
+                    auto wall = handle_manager.Create();
+                    auto& wall_entity = entities.Create(wall);
+                    wall_entity.scale.Set(Tile_Size, Tile_Size, 1.0f);
+                    TileToWorld(Tile_Size, x, y, &wall_entity.position.x, &wall_entity.position.z);
+                    wall_entity.position.x += Tile_Size * 0.5f;
+                    wall_entity.rotation.y = 90.0f;
+                    auto& wall_sprite = opaque_sprites.Create(wall);
+                    wall_sprite.texture_id = textures[1];
+                    //walls.push_back(wall);
+                    drawables_opaque.push_back(wall);
                 }
 
                 if ((x == 0) || (((x - 1) >= 0) && dungeon.GetTile(x - 1, y) == 0))
                 {
-                    Entity wall;
-                    wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
-                    TileToWorld(Tile_Size, x, y, &wall.position.x, &wall.position.z);
-                    wall.position.x -= Tile_Size * 0.5f;
-                    wall.rotation.y = 90.0f;
-                    walls.push_back(wall);
+                    auto wall = handle_manager.Create();
+                    auto& wall_entity = entities.Create(wall);
+                    wall_entity.scale.Set(Tile_Size, Tile_Size, 1.0f);
+                    TileToWorld(Tile_Size, x, y, &wall_entity.position.x, &wall_entity.position.z);
+                    wall_entity.position.x -= Tile_Size * 0.5f;
+                    wall_entity.rotation.y = 90.0f;
+                    auto& wall_sprite = opaque_sprites.Create(wall);
+                    wall_sprite.texture_id = textures[1];
+                    //walls.push_back(wall);
+                    drawables_opaque.push_back(wall);
                 }
 
                 if ((y == dungeon.height - 1) || ((y + 1) < dungeon.height - 1) && dungeon.GetTile(x, y + 1) == 0)
                 {
-                    Entity wall;
-                    wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
-                    TileToWorld(Tile_Size, x, y, &wall.position.x, &wall.position.z);
-                    wall.position.z += Tile_Size * 0.5f;
-                    walls.push_back(wall);
+                    auto wall = handle_manager.Create();
+                    auto& wall_entity = entities.Create(wall);
+                    wall_entity.scale.Set(Tile_Size, Tile_Size, 1.0f);
+                    TileToWorld(Tile_Size, x, y, &wall_entity.position.x, &wall_entity.position.z);
+                    wall_entity.position.z += Tile_Size * 0.5f;
+                    auto& wall_sprite = opaque_sprites.Create(wall);
+                    wall_sprite.texture_id = textures[1];
+                    //walls.push_back(wall);
+                    drawables_opaque.push_back(wall);
                 }
 
                 if ((y == 0) || ((y - 1) >= 0) && dungeon.GetTile(x, y - 1) == 0)
                 {
-                    Entity wall;
-                    wall.scale.Set(Tile_Size, Tile_Size, 1.0f);
-                    TileToWorld(Tile_Size, x, y, &wall.position.x, &wall.position.z);
-                    wall.position.z -= Tile_Size * 0.5f;
-                    walls.push_back(wall);
+                    auto wall = handle_manager.Create();
+                    auto& wall_entity = entities.Create(wall);
+                    wall_entity.scale.Set(Tile_Size, Tile_Size, 1.0f);
+                    TileToWorld(Tile_Size, x, y, &wall_entity.position.x, &wall_entity.position.z);
+                    wall_entity.position.z -= Tile_Size * 0.5f;
+                    auto& wall_sprite = opaque_sprites.Create(wall);
+                    wall_sprite.texture_id = textures[1];
+                    //walls.push_back(wall);
+                    drawables_opaque.push_back(wall);
                 }
 
             }
         }
     }
-
-#if 0
-    enemy.position.y = -0.5f;
-    enemy_move.tile_x = 0;
-    enemy_move.tile_y = 9;
-    TileToWorld(Tile_Size, enemy_move.tile_x, enemy_move.tile_y, &enemy.position.x, &enemy.position.z);
-#endif
 
     auto CreateTileMovement = [this](int tile_x, int tile_y, Handle h)
     {
@@ -230,18 +225,22 @@ GameState::GameState()
     player = handle_manager.Create();
     CreateTileMovement(0, 0, player);
 
-    auto CreateEntity = [&CreateTileMovement, this](int tile_x, int tile_y) -> Handle
+    auto CreateEnemy = [&CreateTileMovement, this](int tile_x, int tile_y) -> Handle
     {
         auto h = handle_manager.Create();
         auto& e = entities.Create(h);
         CreateTileMovement(tile_x, tile_y, h);
         TileToWorld(Tile_Size, tile_x, tile_y, &e.position.x, &e.position.z);
         e.position.y = -0.5f;
+        auto& enemy_sprite = opaque_sprites.Create(h);
+        enemy_sprite.texture_id = textures[2];
 
         return h;
     };
 
-    enemies.push_back(CreateEntity(0, 9));
+    auto enemy = CreateEnemy(0, 9);
+    enemies.push_back(enemy);
+    drawables_translucent.push_back(enemy);
 }
 
 GameState::~GameState()
@@ -382,12 +381,6 @@ void GameState::Update(float dt, const Input& input)
     if (action_timer >= action_time_limit)
     {
         //do action
-#if 0
-        if (enemy_move.tile_y > 0)
-        {
-            enemy_move.SetPositionToMove(Tile_Size, enemy_move.tile_x, enemy_move.tile_y - 1);
-        }
-#endif
         for (auto& enemy_handle : enemies)
         {
             auto& enemy_move = tile_movements.Get(enemy_handle);
@@ -425,9 +418,6 @@ void GameState::Update(float dt, const Input& input)
         DEBUG_LOG("\n");
         DEBUG_LOG("\n");
     }
-
-    //Enemies rotate along the camera.
-    //enemy.rotation.y = camera.rotation;
 }
 
 void GameState::Render(float screenRatio)
@@ -450,6 +440,7 @@ void GameState::Render(float screenRatio)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glActiveTexture(GL_TEXTURE0);
 
+#if 0
     OpenGLRenderSingleTextureEntities(floors.data(),
                                       floors.size(),
                                       model_location,
@@ -461,24 +452,31 @@ void GameState::Render(float screenRatio)
                                       model_location,
                                       textures[1],
                                       texture_location);
+#endif
+#if 0
+    for (auto& floor : floors)
+    {
+        OpenGLRenderSingleTextureEntities(&entities.Get(floor),
+                                          1,
+                                          model_location,
+                                          textures[0],
+                                          texture_location);
+    }
+    for (auto& wall : walls)
+    {
+        OpenGLRenderSingleTextureEntities(&entities.Get(wall),
+                                          1,
+                                          model_location,
+                                          textures[1],
+                                          texture_location);
+    }
+#endif
+    OpenGLDrawOpaque(drawables_opaque.data(), drawables_opaque.size(), entities, opaque_sprites, model_location, texture_location);
+
 
     // Render translucent objects
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-#if 0
-    OpenGLRenderSingleTextureEntities(enemies.data(),
-                                      enemies.size(),
-                                      model_location,
-                                      textures[2],
-                                      texture_location);
-#endif
-#if 0
-    OpenGLRenderSingleTextureEntities(&enemy,
-                                      1,
-                                      model_location,
-                                      textures[2],
-                                      texture_location);
-#endif
     for (auto& enemy_handle : enemies)
     {
         OpenGLRenderSingleTextureEntities(&entities.Get(enemy_handle),
@@ -487,7 +485,6 @@ void GameState::Render(float screenRatio)
                                           textures[2],
                                           texture_location);
     }
-
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindVertexArray(0);

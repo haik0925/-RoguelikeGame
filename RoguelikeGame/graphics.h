@@ -12,4 +12,9 @@ void OpenGLRenderSingleTextureEntities(const Entity* entities,
                                              int texture_id,
                                              int texture_location);
 
+void OpenGLDrawOpaque(const Handle* handles, int count,
+                      ComponentManager<Entity>& entities,
+                      ComponentManager<OpaqueSprite>& opaque_sprites,
+                      int model_location, int texture_location);
+
 #endif//GRAPHICS_H

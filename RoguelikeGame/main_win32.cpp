@@ -116,7 +116,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     SDL_Window* window = nullptr;
     SDL_GLContext context = nullptr;
-    if (Win32Init(1024, 768, &window, &context))
+    if (Win32Init(800, 600, &window, &context))
     {
         {
             //GameState game_state;

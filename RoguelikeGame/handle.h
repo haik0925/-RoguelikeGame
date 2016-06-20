@@ -30,7 +30,7 @@ namespace std
 template<typename Component>
 struct ComponentManager
 {
-    static const int Max_Count = 10;
+    static const int Max_Count = 1000;
     Component data[Max_Count] = {};
     Handle owner[Max_Count] = {};
     int current_count = 0;
@@ -79,7 +79,7 @@ struct ComponentManager
 
 struct HandleManager
 {
-    static const int Max_Count = 10;
+    static const int Max_Count = 1000;
 
     Handle  handles[Max_Count];
     u16     gens[Max_Count] = {};

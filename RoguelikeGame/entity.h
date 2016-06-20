@@ -9,23 +9,42 @@ struct Entity
     Vec3 position;
     Vec3 scale;
     Vec3 rotation;
-    int texture_id;
 
     explicit
     Entity(const Vec3& position = Vec3(),
-         const Vec3& scale = Vec3(1.0f, 1.0f, 1.0f),
-         const Vec3 rotation = Vec3(),
-         int texture_id = 0)
+           const Vec3& scale = Vec3(1.0f, 1.0f, 1.0f),
+           const Vec3 rotation = Vec3())
          : position(position)
          , scale(scale)
          , rotation(rotation)
-         , texture_id(texture_id)
     {}
 };
 
-struct Entities
-    : ComponentManager<Entity>
+struct Color3
 {
+    float r;
+    float g;
+    float b;
+};
+
+struct OpaqueSprite
+{
+    int texture_id;
+    Color3 color;
+};
+
+struct Color4
+{
+    float r;
+    float g;
+    float b;
+    float a;
+};
+
+struct TranslucentSprite
+{
+    int texture_id;
+    Color4 color;
 };
 
 #endif//ENTITY_H
