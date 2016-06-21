@@ -285,9 +285,11 @@ void GameState::Update(float dt, const Input& input)
 
                 if (dungeon.IsInside(moved_x, moved_z) && dungeon.GetTile(moved_x, moved_z) > 0)
                 {
-                    player_move.SetPositionToMove(Tile_Size, moved_x, moved_z);
-                    action_timer = action_time_limit;
-                    move_state = MoveState_Moving;
+                    if (player_move.SetPositionToMove(Tile_Size, moved_x, moved_z));
+                    {
+                        action_timer = action_time_limit;
+                        move_state = MoveState_Moving;
+                    }
                     break;
                 }
             }
@@ -382,6 +384,7 @@ void GameState::Update(float dt, const Input& input)
         enemy_entity.rotation.y = camera.rotation;
     }
 
+#if 0
     if (input.pressed.move_left ||
         input.pressed.move_right ||
         input.pressed.move_front ||
@@ -399,12 +402,15 @@ void GameState::Update(float dt, const Input& input)
         DEBUG_LOG("\n");
         DEBUG_LOG("\n");
     }
+#endif
 }
 
-void GameState::Render(float screenRatio)
+void GameState::Render(int width, int height)
 {
+    float screen_ratio = static_cast<float>(width) / static_cast<float>(height);
+
     Mat4 view = camera.GetView();
-    Mat4 projection = camera.GetProjection(screenRatio);
+    Mat4 projection = camera.GetProjection(screen_ratio);
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -437,6 +443,32 @@ void GameState::Render(float screenRatio)
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+    {
+        Mat4 identity = Identity();
+        //Mat4 translate = Translation(width / 2, height / 2, 0.0f);
+        Mat4 translate = Translation(0.5f, 0.5f, 0.0f);
+        //Mat4 translate_inv = Translation(-1, -1, 0.0f);
+        Mat4 scale = Scale(100 * action_timer, 100, 1);
+        Mat4 model = scale * translate;
+
+        Mat4 projection_gui = 
+        {
+            2 / static_cast<float>(width), 0, 0, -1,
+            0, 2 / static_cast<float>(height), 0, -1,
+            0, 0, 10 - 0, -1,
+            0, 0, 0, 1,
+        };
+
+        //glActiveTexture(GL_TEXTURE0);
+        glUniformMatrix4fv(model_location, 1, GL_TRUE, model.m);
+        glUniformMatrix4fv(view_location, 1, GL_TRUE, identity.m);
+        glUniformMatrix4fv(projection_location, 1, GL_TRUE, projection_gui.m);
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+    }
 }
 
 void GameState::DebugUpdate(float dt, const Input& input)

@@ -61,9 +61,9 @@ struct TileMovement
     bool active = false;
     Dungeon* dungeon = nullptr;
 
-    void SetPositionToMove(const float Tile_Size, int new_tile_x, int new_tile_y)
+    bool SetPositionToMove(const float Tile_Size, int new_tile_x, int new_tile_y)
     {
-        if (dungeon->IsEntityExist(new_tile_x, new_tile_y) == false)
+        if (active == false && dungeon->IsEntityExist(new_tile_x, new_tile_y) == false)
         {
             dungeon->MoveEntity(tile_x, tile_y, new_tile_x, new_tile_y);
             TileToWorld(Tile_Size, tile_x, tile_y, &from.x, &from.y);
@@ -72,7 +72,11 @@ struct TileMovement
             tile_y = new_tile_y;
             t = 0.0f;
             active = true;
+
+            return true;
         }
+
+        return false;
     }
 
     // Returns true when the action is completed
@@ -144,7 +148,7 @@ struct GameState
 
     void Update(float dt, const Input& input);
 
-    void Render(float screenRatio);
+    void Render(int width, int height);
 
     void DebugUpdate(float dt, const Input& input);
 };

@@ -218,7 +218,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
                 Win32Dimension dim(window);
 
                 glViewport(0, 0, dim.width, dim.height);
-                game_state->Render((float)dim.width / (float)dim.height);
+                game_state->Render(dim.width, dim.height);
 
                 SDL_GL_SwapWindow(window);
 
