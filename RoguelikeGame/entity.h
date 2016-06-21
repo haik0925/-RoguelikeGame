@@ -13,7 +13,7 @@ struct Entity
     explicit
     Entity(const Vec3& position = Vec3(),
            const Vec3& scale = Vec3(1.0f, 1.0f, 1.0f),
-           const Vec3 rotation = Vec3())
+           const Vec3& rotation = Vec3())
          : position(position)
          , scale(scale)
          , rotation(rotation)

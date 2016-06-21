@@ -51,10 +51,10 @@ GameState::GameState()
 
     float temp[] =
     {
-        0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-        -0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-        0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f
+        0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+        -0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f
     };
     for (int i = 0; i < ARRAY_SIZE(quad); ++i)
         quad[i] = temp[i];
@@ -285,7 +285,7 @@ void GameState::Update(float dt, const Input& input)
 
                 if (dungeon.IsInside(moved_x, moved_z) && dungeon.GetTile(moved_x, moved_z) > 0)
                 {
-                    if (player_move.SetPositionToMove(Tile_Size, moved_x, moved_z));
+                    if (player_move.SetPositionToMove(Tile_Size, moved_x, moved_z))
                     {
                         action_timer = action_time_limit;
                         move_state = MoveState_Moving;
@@ -419,10 +419,14 @@ void GameState::Render(int width, int height)
     auto view_location = glGetUniformLocation(shader_program, "view");
     auto projection_location = glGetUniformLocation(shader_program, "projection");
     auto texture_location = glGetUniformLocation(shader_program, "our_texture");
-    //auto color_location = glGetUniformLocation(shader_program, "color");
+    auto color_location = glGetUniformLocation(shader_program, "color");
+    auto is_texture_enabled_location = glGetUniformLocation(shader_program, "is_texture_enabled");
+    float color[] = { 1.0f, 1.0f, 1.0f };
     glUseProgram(shader_program);
     glUniformMatrix4fv(view_location, 1, GL_TRUE, view.m);
     glUniformMatrix4fv(projection_location, 1, GL_TRUE, projection.m);
+    glUniform3fv(color_location, 1, color);
+    glUniform1i(is_texture_enabled_location, true);
     glBindVertexArray(vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glActiveTexture(GL_TEXTURE0);
@@ -462,6 +466,8 @@ void GameState::Render(int width, int height)
         glUniformMatrix4fv(model_location, 1, GL_TRUE, model.m);
         glUniformMatrix4fv(view_location, 1, GL_TRUE, identity.m);
         glUniformMatrix4fv(projection_location, 1, GL_TRUE, projection_gui.m);
+        glUniform3fv(color_location, 1, color);
+        glUniform1i(is_texture_enabled_location, false);
         glBindVertexArray(vao);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
