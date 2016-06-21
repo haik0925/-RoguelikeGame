@@ -13,9 +13,7 @@ out vec2 Tex_Coord;
 
 void main()
 {
-    //gl_Position = projection * view * model * vec4(position, 1.0);
     gl_Position = projection * view * model * vec4(position, 1.0);
     Color = color;
     Tex_Coord = vec2(tex_coord.x, 1.0 - tex_coord.y);
-    //gl_Position = vec4(position, 1.0);
 }

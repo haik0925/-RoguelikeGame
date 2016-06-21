@@ -446,10 +446,8 @@ void GameState::Render(int width, int height)
 
     {
         Mat4 identity = Identity();
-        //Mat4 translate = Translation(width / 2, height / 2, 0.0f);
         Mat4 translate = Translation(0.5f, 0.5f, 0.0f);
-        //Mat4 translate_inv = Translation(-1, -1, 0.0f);
-        Mat4 scale = Scale(100 * action_timer, 100, 1);
+        Mat4 scale = Scale(static_cast<float>(width) / action_time_limit * action_timer, 50, 1);
         Mat4 model = scale * translate;
 
         Mat4 projection_gui = 
@@ -460,7 +458,7 @@ void GameState::Render(int width, int height)
             0, 0, 0, 1,
         };
 
-        //glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, 0);
         glUniformMatrix4fv(model_location, 1, GL_TRUE, model.m);
         glUniformMatrix4fv(view_location, 1, GL_TRUE, identity.m);
         glUniformMatrix4fv(projection_location, 1, GL_TRUE, projection_gui.m);
