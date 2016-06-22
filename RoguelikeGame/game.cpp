@@ -205,18 +205,23 @@ GameState::GameState()
 
     player = handle_manager.Create();
     CreateTileMovement(0, 0, player);
+    auto& player_hp = health_points.Create(player);
+    player_hp = 100.0f;
 
     auto CreateEnemy = [&CreateTileMovement, this](int tile_x, int tile_y) -> Handle
     {
-        auto h = handle_manager.Create();
-        auto& e = entities.Create(h);
-        CreateTileMovement(tile_x, tile_y, h);
+        auto enemy_handle = handle_manager.Create();
+        auto& e = entities.Create(enemy_handle);
+        CreateTileMovement(tile_x, tile_y, enemy_handle);
         TileToWorld(Tile_Size, tile_x, tile_y, &e.position.x, &e.position.z);
         e.position.y = -0.5f;
-        auto& enemy_sprite = translucent_sprites.Create(h);
+        auto& enemy_sprite = translucent_sprites.Create(enemy_handle);
         enemy_sprite.texture_id = textures[2];
 
-        return h;
+        auto& enemy_hp = health_points.Create(enemy_handle);
+        enemy_hp = 50.0f;
+
+        return enemy_handle;
     };
 
     auto enemy = CreateEnemy(0, 9);
@@ -289,6 +294,34 @@ void GameState::Update(float dt, const Input& input)
                     {
                         action_timer = action_time_limit;
                         move_state = MoveState_Moving;
+                    }
+                    //TODO: Existence checking is executed twice in SetPositionToMove func.
+                    //      Where to remove the func call?
+                    else if (dungeon.IsEntityExist(moved_x, moved_z))
+                    {
+                        auto enemy_handle = dungeon.GetEntityHandle(moved_x, moved_z);
+                        auto& enemy_hp = health_points.Get(enemy_handle);
+                        enemy_hp -= 10.0f;
+                        if (enemy_hp <= 0.0f)
+                        {
+                            //TODO: There should be better ways to destroy enemies.
+                            handle_manager.Destroy(enemy_handle);
+                            {
+                                auto it_end = enemies.end();
+                                auto found = std::find(enemies.begin(), it_end, enemy_handle);
+                                if (found != it_end) { enemies.erase(found); }
+                            }
+
+                            {
+                                auto it_end = drawables_translucent.end();
+                                auto found = std::find(drawables_translucent.begin(),
+                                                       drawables_translucent.end(),
+                                                       enemy_handle);
+                                if (found != it_end) { drawables_translucent.erase(found); }
+                            }
+                            dungeon.existence_grid[TileToIndex(moved_x, moved_z, dungeon.width)] = false;
+                        }
+                        action_timer = action_time_limit;
                     }
                     break;
                 }
@@ -375,7 +408,7 @@ void GameState::Update(float dt, const Input& input)
 
         action_timer = 0.0f;
     }
-    //if (enemy_move.active) { enemy_move.UpdateMovement(dt, &enemy.position.x, &enemy.position.z); }
+
     for (auto& enemy_handle : enemies)
     {
         auto& enemy_move = tile_movements.Get(enemy_handle);

@@ -120,6 +120,7 @@ struct GameState
     ComponentManager<OpaqueSprite>      opaque_sprites;
     ComponentManager<TranslucentSprite> translucent_sprites;
     ComponentManager<TileMovement>      tile_movements;
+    ComponentManager<float>             health_points;
 
     /*
     std::vector<Handle> floors;
