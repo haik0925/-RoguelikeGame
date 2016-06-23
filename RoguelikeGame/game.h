@@ -98,6 +98,12 @@ struct TileMovement
     }
 };
 
+struct TileCoord
+{
+    int x;
+    int y;
+};
+
 struct GameState
 {
     float quad[32] = {};

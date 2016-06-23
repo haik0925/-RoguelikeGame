@@ -473,6 +473,7 @@ void GameState::Render(int width, int height)
     // Render translucent objects
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    //TODO: need to sort translucent sprites by z depth.
     OpenGLDrawTranslucent(drawables_translucent.data(),
                           drawables_translucent.size(),
                           entities, translucent_sprites,
@@ -505,6 +506,65 @@ void GameState::Render(int width, int height)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
+    }
+    {
+
+        TileCoord coord = {};
+        switch (player_dir)
+        {
+        case Direction_Front:
+            coord.x = 0;
+            coord.y = 1;
+            break;
+        case Direction_Right:
+            coord.x = 1;
+            coord.y = 0;
+            break;
+        case Direction_Back:
+            coord.x = 0;
+            coord.y = -1;
+            break;
+        case Direction_Left:
+            coord.x = -1;
+            coord.y = 0;
+            break;
+        }
+        const auto& player_tile_movement = tile_movements.Get(player);
+        coord.x += player_tile_movement.tile_x;
+        coord.y += player_tile_movement.tile_y;
+
+        if (dungeon.IsInside(coord.x, coord.y) && dungeon.IsEntityExist(coord.x, coord.y))
+        {
+            //auto facing_enemy_handle = dungeon.GetEntityHandle(coord.x, coord.y);
+            auto health = health_points.Get(dungeon.GetEntityHandle(coord.x, coord.y));
+
+            Mat4 identity = Identity();
+            Mat4 offset = Translation(0.5f, 0.5f, 0.0f);
+            Mat4 translate = Translation(100, 200, 0.0f);
+            Mat4 scale = Scale(health * 5.f, 50, 1);
+            Mat4 model = translate * scale * offset;
+
+            Mat4 projection_gui =
+            {
+                2 / static_cast<float>(width), 0, 0, -1,
+                0, 2 / static_cast<float>(height), 0, -1,
+                0, 0, 10 - 0, -1,
+                0, 0, 0, 1,
+            };
+
+            glBindTexture(GL_TEXTURE_2D, 0);
+            glUniformMatrix4fv(model_location, 1, GL_TRUE, model.m);
+            glUniformMatrix4fv(view_location, 1, GL_TRUE, identity.m);
+            glUniformMatrix4fv(projection_location, 1, GL_TRUE, projection_gui.m);
+            float health_color[] = { 1.0f, 0.0f, 0.0f };
+            glUniform3fv(color_location, 1, health_color);
+            glUniform1i(is_texture_enabled_location, false);
+            glBindVertexArray(vao);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
+        }
+
     }
 }
 
