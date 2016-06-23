@@ -206,7 +206,8 @@ GameState::GameState()
     player = handle_manager.Create();
     CreateTileMovement(0, 0, player);
     auto& player_hp = health_points.Create(player);
-    player_hp = 100.0f;
+    //player_hp = 100.0f;
+    new(&player_hp)Health(100.0f);
 
     auto CreateEnemy = [&CreateTileMovement, this](int tile_x, int tile_y) -> Handle
     {
@@ -219,7 +220,8 @@ GameState::GameState()
         enemy_sprite.texture_id = textures[2];
 
         auto& enemy_hp = health_points.Create(enemy_handle);
-        enemy_hp = 50.0f;
+        //enemy_hp = 50.0f;
+        new(&enemy_hp)Health(50.0f);
 
         return enemy_handle;
     };
@@ -300,9 +302,9 @@ void GameState::Update(float dt, const Input& input)
                     else if (dungeon.IsEntityExist(moved_x, moved_z))
                     {
                         auto enemy_handle = dungeon.GetEntityHandle(moved_x, moved_z);
-                        auto& enemy_hp = health_points.Get(enemy_handle);
-                        enemy_hp -= 10.0f;
-                        if (enemy_hp <= 0.0f)
+                        auto& enemy_health = health_points.Get(enemy_handle);
+                        enemy_health.current_hp -= 10.0f;
+                        if (enemy_health.current_hp <= 0.0f)
                         {
                             //TODO: There should be better ways to destroy enemies.
                             handle_manager.Destroy(enemy_handle);
@@ -535,13 +537,16 @@ void GameState::Render(int width, int height)
 
         if (dungeon.IsInside(coord.x, coord.y) && dungeon.IsEntityExist(coord.x, coord.y))
         {
-            //auto facing_enemy_handle = dungeon.GetEntityHandle(coord.x, coord.y);
-            auto health = health_points.Get(dungeon.GetEntityHandle(coord.x, coord.y));
+            const float hp_bar_width = 300.f;
+            const float hp_bar_height = 25.f;
+            const auto& health = health_points.Get(dungeon.GetEntityHandle(coord.x, coord.y));
+
+            Vec2 center(width / 2.0f, height / 2.0f);
 
             Mat4 identity = Identity();
             Mat4 offset = Translation(0.5f, 0.5f, 0.0f);
-            Mat4 translate = Translation(100, 200, 0.0f);
-            Mat4 scale = Scale(health * 5.f, 50, 1);
+            Mat4 translate = Translation(center.x - hp_bar_width / 2.0f, center.y, 0.0f);
+            Mat4 scale = Scale(health.current_hp / health.max_hp * hp_bar_width, hp_bar_height, 1);
             Mat4 model = translate * scale * offset;
 
             Mat4 projection_gui =
